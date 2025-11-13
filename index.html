@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CBT Simulator - Flexi Tutors</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f9fafb; margin: 0; padding: 0; }
+  header {
+    background: #007bff; color: #fff; text-align: center;
+    padding: 15px; position: sticky; top: 0; z-index: 10;
+  }
+  header img { height: 50px; vertical-align: middle; }
+  header h1 { margin: 5px 0 0; font-size: 24px; }
+  header p { margin: 0; font-size: 14px; }
+  .webcam-container { display: flex; justify-content: center; background: #fff; padding: 10px; }
+  video { width: 200px; border: 2px solid #007bff; border-radius: 8px; }
+  .page {
+    display: none; max-width: 700px; margin: 20px auto;
+    background: #fff; padding: 20px; border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .active { display: block; }
+  input, select, button {
+    margin: 10px 0; padding: 10px; width: 100%;
+    box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;
+  }
+  button {
+    cursor: pointer; background: #007BFF; color: #fff; border: none; font-weight: bold;
+  }
+  button:hover { background: #0056b3; }
+  #options button { width: 48%; margin: 5px 1%; }
+  #timerArea { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  #timer { font-weight: bold; }
+  #numberTabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
+  .numTab {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #e5e7eb; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; font-weight: bold;
+  }
+  .numTab.active { background: #007bff; color: #fff; }
+  footer {
+    text-align: center; padding: 15px; background: #f1f1f1;
+    border-top: 1px solid #ccc; color: #555; font-size: 14px;
+  }
+  /* Calculator */
+  #calculator {
+    position: fixed; bottom: 80px; right: 30px;
+    background: #fff; border: 2px solid #007bff; border-radius: 10px;
+    padding: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    width: 240px; display: none; z-index: 1000;
+  }
+  #calc-display {
+    width: 100%; padding: 10px; font-size: 18px;
+    margin-bottom: 10px; text-align: right;
+    border: 1px solid #ccc; border-radius: 5px;
+  }
+  .calc-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .calc-btns button {
+    padding: 10px; font-size: 16px; background: #007bff;
+    color: #fff; border: none; border-radius: 5px;
+  }
+  .calc-btns button:hover { background: #0056b3; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo-placeholder.png" alt="Flexi Tutors Logo" />
+  <h1>Flexi Tutors</h1>
+  <p>Webcam Proctoring</p>
+  <h3>Free JAMB Form 2026 Quiz Exam</h3>
+</header>
+
+<div class="webcam-container">
+  <video id="webcam" autoplay muted></video>
+</div>
+
+<!-- PAGE 1 -->
+<div class="page active" id="page1">
+  <h2>Candidate Information</h2>
+  <input type="text" id="fullName" placeholder="Full Name" required>
+  <input type="text" id="phone" placeholder="Phone Number" required>
+  <input type="email" id="email" placeholder="Email Address" required>
+  <button onclick="nextPage(2)">Next</button>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="page2">
+  <h2>Select 3 Subjects (English is Compulsory)</h2>
+  <p><strong>English</strong> has already been selected for you.</p>
+  <select id="subjectSelect" multiple required>
+    <option value="maths">Mathematics</option>
+    <option value="physics">Physics</option>
+    <option value="chemistry">Chemistry</option>
+    <option value="biology">Biology</option>
+    <option value="geography">Geography</option>
+    <option value="government">Government</option>
+    <option value="civic">Civic Education</option>
+    <option value="economics">Economics</option>
+    <option value="accounting">Financial Accounting</option>
+    <option value="commerce">Commerce</option>
+    <option value="literature">Literature-in-English</option>
+    <option value="yoruba">Yoruba</option>
+    <option value="crs">CRS</option>
+    <option value="irs">IRS</option>
+    <option value="french">French</option>
+  </select>
+  <small>Select exactly <strong>3 additional subjects</strong>.</small>
+  <button onclick="nextPage(3)">Next</button>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page" id="page3">
+  <h2>Exam Instructions</h2>
+  <ul>
+    <li>Read each question carefully.</li>
+    <li>You have 20 minutes to complete the exam.</li>
+    <li>Do not leave this page during the exam.</li>
+    <li>Webcam recording will start once you begin.</li>
+  </ul>
+  <button onclick="startExam()">Start Exam</button>
+</div>
+
+<!-- PAGE 4 -->
+<div class="page" id="page4">
+  <div id="timerArea">
+    <div id="timer">Time Left: 20:00</div>
+    <button id="toggleCalcBtn" style="width:auto;" onclick="toggleCalculator()">🧮 Calculator</button>
+  </div>
+  <div id="numberTabs"></div>
+  <div id="questionArea">
+    <p id="questionText"></p>
+    <div id="options"></div>
+  </div>
+  <button onclick="nextQuestion()">Next</button>
+</div>
+
+<!-- PAGE 5 -->
+<div class="page" id="page5">
+  <h2>Exam Submitted Successfully!</h2>
+  <p>Thank you for completing the exam. Your webcam recording and answers have been saved.</p>
+</div>
+
+<footer>
+  &copy; 2025 Flexi Tutors | All Rights Reserved
+</footer>
+
+<!-- CALCULATOR -->
+<div id="calculator">
+  <input type="text" id="calc-display" readonly>
+  <div class="calc-btns">
+    <button onclick="calcInput('7')">7</button>
+    <button onclick="calcInput('8')">8</button>
+    <button onclick="calcInput('9')">9</button>
+    <button onclick="calcInput('/')">÷</button>
+    <button onclick="calcInput('4')">4</button>
+    <button onclick="calcInput('5')">5</button>
+    <button onclick="calcInput('6')">6</button>
+    <button onclick="calcInput('*')">×</button>
+    <button onclick="calcInput('1')">1</button>
+    <button onclick="calcInput('2')">2</button>
+    <button onclick="calcInput('3')">3</button>
+    <button onclick="calcInput('-')">−</button>
+    <button onclick="calcInput('0')">0</button>
+    <button onclick="calcInput('.')">.</button>
+    <button onclick="calcClear()">C</button>
+    <button onclick="calcInput('+')">+</button>
+    <button style="grid-column: span 4; background: green;" onclick="calcEvaluate()">=</button>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCaVTwzI_0h0RVdh_ASDDqdsvrg_3oHPSs",
+  authDomain: "flexi-702a9.firebaseapp.com",
+  projectId: "flexi-702a9",
+  storageBucket: "flexi-702a9.firebasestorage.app",
+  messagingSenderId: "647814322831",
+  appId: "1:647814322831:web:74fc00cfc62abdc7e76efa",
+  measurementId: "G-7BC49SZJ6V"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+let mediaRecorder, recordedChunks = [];
+const webcam = document.getElementById('webcam');
+
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  .then(stream => {
+    webcam.srcObject = stream;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+  })
+  .catch(() => alert("⚠️ Webcam access denied or not available."));
+
+let currentPage = 1, currentQuestionIndex = 0, examQuestions = [], candidateAnswers = [];
+let selectedSubjects = ["english"];
+let timer, timeLeft = 20 * 60;
+let fullName, phone, email;
+
+const questionBank = {
+  "maths": [
+    {"id":1,"question":"The mean of the numbers 1.2, 1.0, 0.9, 1.4, 0.8, 0.8, 1.2 and 1.1 is:","options":{"A":"1.5","B":"0.8","C":"1.0","D":"1.02"},"answer":"D"},
+    {"id":2,"question":"\u007b(1.28 \u00d7 10^4)\u007d ÷ \u007b(6.4 \u00d7 10^2)\u007d equals:","options":{"A":"2 × 10^‑5","B":"2 × 10^‑1","C":"2 × 10^1","D":"2 × 10^‑4"},"answer":"C"},
+    {"id":3,"question":"If the value of π is taken as \u007b22/7\u007d, the area of a semicircle of diameter 42 m is:","options":{"A":"5544 m²","B":"1386 m²","C":"132 m²","D":"264 m²"},"answer":"B"},
+    {"id":4,"question":"(3.2)² − (1.8)² equals:","options":{"A":"7.0","B":"2.56","C":"13.48","D":"2.0"},"answer":"D"},
+    {"id":5,"question":"In ΔPQR, PQ = 10 cm, QR = 8 cm and RP = 6 cm. A perpendicular RS is drawn from R to PQ. Find the length of RS.","options":{"A":"4 cm","B":"32 cm","C":"30/7 cm","D":"40/7 cm"},"answer":"D"},
+    {"id":6,"question":"If log₈10 = X, evaluate log₈5 in terms of X.","options":{"A":"½ X","B":"X − ¼","C":"X − ⅓","D":"X − ½"},"answer":"C"},
+    {"id":7,"question":"Simplify: √2/(x + √2) = 1/(x − √2). Find x.","options":{"A":"3√2 + 4","B":"3√2 − 4","C":"3 − 2√2","D":"4 + 2√2"},"answer":"B"},
+    {"id":8,"question":"If the expression \u007b(a² b⁻³ c)\u007d^(3/4) ÷ (a⁻¹ b⁴ c⁵) = a^p b^q c^r, what is the value of p + 2q?","options":{"A":"5/2","B":"−5/4","C":"−25/4","D":"−10"},"answer":"B"},
+    {"id":9,"question":"A number is selected at random between 20 and 30 (inclusive). Find the probability that the number is a prime.","options":{"A":"2/11","B":"5/11","C":"6/11","D":"8/11"},"answer":"B"},
+    {"id":10,"question":"Express the product of 0.0014 and 0.011 in standard form.","options":{"A":"1.54 × 10^‑2","B":"1.54 × 10^‑3","C":"1.54 × 10^‑2","D":"1.54 × 10^‑5"},"answer":"D"},
+    {"id":11,"question":"If sin θ = −3/5 and θ lies in the third quadrant, find cos θ.","options":{"A":"4/5","B":"−5/4","C":"5/4","D":"−4/5"},"answer":"D"},
+    {"id":12,"question":"Find the length of a chord of a circle of radius 5 cm which is 3 cm from the centre.","options":{"A":"8 cm","B":"5.6 cm","C":"7 cm","D":"6.5 cm"},"answer":"D"},
+    {"id":13,"question":"In a class of 50 students, 40 offered Physics and 30 offered Biology. What is the minimum number that offered both Physics and Biology?","options":{"A":"20","B":"30","C":"40","D":"54"},"answer":"A"},
+    {"id":14,"question":"If y varies directly as the square root of x and y = 3 when x = 16, calculate y when x = 64.","options":{"A":"6","B":"12","C":"9","D":"24"},"answer":"A"},
+    {"id":15,"question":"In how many ways can the word “MATHEMATICIAN” be arranged?","options":{"A":"6,794,800","B":"2,664,910","C":"6,227,020,800","D":"129,729,600"},"answer":"D"},
+    {"id":16,"question":"If 4 sin²x − 3 = 0, find x when 0° ≤ x ≤ 90°.","options":{"A":"90°","B":"45°","C":"60°","D":"30°"},"answer":"C"},
+    {"id":17,"question":"Make q the subject of the formula in: (m n)/(p q) − 2 = 1/(a b²)","options":{"A":"q = (a p)/[2(mn − a)]","B":"q = (a p)²/[2(mn − a)]","C":"q = a/p","D":"q = n²"},"answer":"A"},
+    {"id":18,"question":"The locus of a point which moves so that it is equidistant from two intersecting straight lines is the:","options":{"A":"bisector of the two lines","B":"line parallel to the two lines","C":"angle bisector of the two lines","D":"perpendicular bisector of the two lines"},"answer":"C"},
+    {"id":19,"question":"Find the sum to infinity of the series: 0.5 + 0.05 + 0.005 + 0.0005 + …","options":{"A":"0.555…","B":"0.505…","C":"0.55","D":"0.500…"},"answer":"A"},
+    {"id":20,"question":"If p and q are two non‑zero numbers and 18(n + m) = (18 + n)(18 + m), which of the following must be true?","options":{"A":"q = 18","B":"p = 18","C":"p < 1","D":"q < 1"},"answer":"C"}
+  ],
+  "english": [
+    {"id":1,"question":"Read the passage and answer: _“Despite the myriad challenges confronting the sector, the reforms inaugurated last year have succeeded in engendering a palpable shift in operational efficiency.”_ What is the meaning of “myriad” in the sentence?","options":{"A":"limited","B":"countless","C":"insignificant","D":"sporadic"},"answer":"B"},
+    {"id":2,"question":"Select the option that best completes the sentence: _Had she ___ about the consequences, she would not have proceeded so recklessly._","options":{"A":"known","B":"have known","C":"knew","D":"having known"},"answer":"A"},
+    {"id":3,"question":"Which one of the underlined words shows a different vowel sound from the others? A. _bEaR_ B. _hEAr_ C. _pEArl_ D. _fEArless_","options":{"A":"A","B":"B","C":"C","D":"D"},"answer":"C"},
+    {"id":4,"question":"Sentence interpretation: _“No sooner had the speaker commenced than the audience erupted into applause.”_ Which inference is correct?","options":{"A":"The speaker’s speech was boring.","B":"The audience applauded immediately when the speaker started.","C":"The applause delayed the beginning of the speech.","D":"The speaker paused because the audience didn’t understand."},"answer":"B"},
+    {"id":5,"question":"Choose the option that is **closest in meaning** to the word “intransigent”.","options":{"A":"complacent","B":"yielding","C":"unyielding","D":"gregarious"},"answer":"C"},
+    {"id":6,"question":"Which of the following completes the cloze passage best? _“It was only through her dogged perseverance and ___ that she managed to surmount the adversities.”_","options":{"A":"indolence","B":"tenacity","C":"capitulation","D":"futility"},"answer":"B"},
+    {"id":7,"question":"Cloze passage: _“Despite his reputation for candour, his remarks on the matter were imbued with ___ ambiguity.”_","options":{"A":"transparent","B":"disarming","C":"deliberate","D":"blithe"},"answer":"C"},
+    {"id":8,"question":"Which sentence is correctly punctuated?","options":{"A":"She said “the data is inconclusive”, and left the room.","B":"She said, “The data is inconclusive,” and left the room.","C":"She said “The data is inconclusive,” and left the room.","D":"She said, “The data is inconclusive”, and left the room."},"answer":"B"},
+    {"id":9,"question":"Select the word that is opposite in meaning to “salubrious”.","options":{"A":"wholesome","B":"beneficial","C":"unhealthy","D":"invigorating"},"answer":"C"},
+    {"id":10,"question":"Which of the following sentences uses the correct register (formal style) appropriate for an academic paper?","options":{"A":"We all know that this topic is super important.","B":"This study elucidates the salient factors underlying the phenomenon.","C":"Hey, this thing really matters a lot.","D":"You can see why people care about this issue."},"answer":"B"},
+    {"id":11,"question":"Identify the error in the following sentence: _“Neither the manager nor the employees was aware of the impending audit.”_","options":{"A":"Neither … nor should link singular subject only.","B":"The verb ‘was’ should agree with ‘employees’.","C":"The verb should be ‘were’.","D":"There is no error."},"answer":"C"},
+    {"id":12,"question":"Sentence completion: _“If the legislation had been enacted earlier, the economic fallout ___.”_","options":{"A":"would mitigate","B":"would have been mitigated","C":"have been mitigated","D":"would be mitigating"},"answer":"B"},
+    {"id":13,"question":"Read the sentence: _“His ebullient personality endeared him to many, yet his mercurial disposition often alienated allies.”_ What does “mercurial” mean here?","options":{"A":"predictable","B":"volatile","C":"steadfast","D":"lukewarm"},"answer":"B"},
+    {"id":14,"question":"Which of these is a correct transformation of the sentence? _“The committee approved the proposal yesterday.”_ → _“Only after the proposal had been approved ___.”_","options":{"A":"did the committee act yesterday","B":"the committee acted yesterday","C":"did the committee act","D":"the committee did act"},"answer":"A"},
+    {"id":15,"question":"Which option correctly identifies the stressed syllable in the word “–  **in­ne­fec­ti­ve**”?","options":{"A":"in‑NEF‑fective","B":"in‑neFEC­tive","C":"IN‑ne­fec­tive","D":"in­ne­fec‑TIVE"},"answer":"B"},
+    {"id":16,"question":"Choose the sentence with correct subject‑verb agreement:","options":{"A":"Each of the participants have submitted their report.","B":"Either the directors or the manager are responsible.","C":"Neither of the clauses is acceptable.","D":"Many a student understand the assignment."},"answer":"C"},
+    {"id":17,"question":"Which of the following is a correct use of the subjunctive mood?","options":{"A":"If I was you, I would decline.","B":"I insist that he goes on leave.","C":"It is essential that every student be present.","D":"She demands that he is on time."},"answer":"C"},
+    {"id":18,"question":"Synonym: Choose the option closest in meaning to “jejune” as used in a literary review: _“The essay, though elegantly phrased, was fundamentally jejune.”_","options":{"A":"insipid","B":"intricate","C":"profound","D":"innovative"},"answer":"A"},
+    {"id":19,"question":"Select the correct tag question: _“You’re familiar with the new protocol, ___?”_","options":{"A":"aren’t you","B":"are you","C":"isn’t it","D":"won’t you"},"answer":"A"},
+    {"id":20,"question":"Which of the following pairs is most similar in meaning?","options":{"A":"capricious : steady","B":"loquacious : talkative","C":"taciturn : verbose","D":"erudite : ill‑informed"},"answer":"B"}
+  ],
+  "physics": [
+    {"id":1,"question":"A particle moves with a constant speed v around a circle of radius r. The magnitude of the centripetal acceleration is:","options":{"A":"v²/r","B":"r²/v","C":"vr","D":"v/r²"},"answer":"A"},
+    {"id":2,"question":"Two resistors of resistances 4 Ω and 12 Ω are connected in parallel. What is the equivalent resistance?","options":{"A":"(16/3) Ω","B":"3 Ω","C":"(4×12)/(4+12) Ω","D":"4 Ω"},"answer":"C"},
+    {"id":3,"question":"If the half‑life of a radioactive substance is 5 hours, what fraction remains after 15 hours?","options":{"A":"1/8","B":"1/4","C":"1/16","D":"1/2"},"answer":"A"},
+    {"id":4,"question":"A lens forms an image of a distant object at 20 cm from the lens. Its focal length is approximately:","options":{"A":"20 cm","B":"5 cm","C":"19 cm","D":"21 cm"},"answer":"B"},
+    {"id":5,"question":"The work done by a force of 10 N that moves an object through 2 m in the direction of the force is:","options":{"A":"20 J","B":"5 J","C":"12 J","D":"10 J"},"answer":"A"},
+    {"id":6,"question":"A gas at temperature T occupies volume V. If the temperature is doubled and pressure is kept constant, the new volume is:","options":{"A":"V/2","B":"V","C":"2V","D":"4V"},"answer":"C"},
+    {"id":7,"question":"Which of these is a scalar quantity?","options":{"A":"Torque","B":"Velocity","C":"Pressure","D":"Acceleration"},"answer":"C"},
+    {"id":8,"question":"In a simple harmonic motion of amplitude A, the maximum speed of the particle is given by:","options":{"A":"ωA","B":"A/ω","C":"ω²A","D":"Aω²"},"answer":"A"},
+    {"id":9,"question":"A block of mass m slides down a frictionless incline making angle θ with the horizontal, height h. Its speed at the bottom is:","options":{"A":"√(2gh)","B":"gh","C":"√(gh)","D":"2gh"},"answer":"A"},
+    {"id":10,"question":"Which law states that the induced emf in a closed circuit is proportional to the rate of change of magnetic flux through the circuit?","options":{"A":"Coulomb’s law","B":"Faraday’s law","C":"Ohm’s law","D":"Kirchhoff’s law"},"answer":"B"},
+    {"id":11,"question":"If the specific heat capacity of a substance is c, mass m, and temperature rises by ΔT, the heat energy absorbed is:","options":{"A":"m c / ΔT","B":"c m ΔT","C":"m ΔT / c","D":"m c + ΔT"},"answer":"B"},
+    {"id":12,"question":"A ring rotates about its axis with angular speed ω. A small mass m is located at radius r on the ring. The centripetal force on the mass is:","options":{"A":"m ω² r","B":"m ω r","C":"m r² ω","D":"m ω² / r"},"answer":"A"},
+    {"id":13,"question":"Light travels from medium 1 into medium 2 with refractive indices n₁ and n₂ respectively. Which of these is true?","options":{"A":"sin i/sin r = n₂/n₁","B":"n₁ sin i = n₂ sin r","C":"n₁ sin r = n₂ sin i","D":"sin r/sin i = n₂/n₁"},"answer":"B"},
+    {"id":14,"question":"The Young’s modulus of a wire is defined as:","options":{"A":"stress/strain","B":"strain/stress","C":"force/area × extension/length","D":"stress × strain"},"answer":"A"},
+    {"id":15,"question":"A plane mirror produces an image of height 4 cm. If the object is placed 20 cm in front of the mirror, the image is located at:","options":{"A":"−20 cm","B":"+20 cm","C":"+10 cm","D":"−10 cm"},"answer":"B"},
+    {"id":16,"question":"In an ideal transformer, the ratio of primary to secondary voltages equals the ratio of turns:","options":{"A":"N₁/N₂","B":"N₂/N₁","C":"V₂/V₁","D":"I₁/I₂"},"answer":"A"},
+    {"id":17,"question":"Which of these is NOT a form of energy transfer by conduction?","options":{"A":"Direct molecular contact","B":"Free‑electron transfer in metals","C":"Radiation through vacuum","D":"Vibration of atoms in lattice"},"answer":"C"},
+    {"id":18,"question":"A photon has energy of 3.3×10⁻¹⁹ J. Its frequency ν is approximately (h = 6.63×10⁻³⁴ J·s):","options":{"A":"5×10¹⁴ Hz","B":"2×10¹⁴ Hz","C":"1×10¹⁵ Hz","D":"7×10¹⁴ Hz"},"answer":"A"},
+    {"id":19,"question":"If the amplitude of a wave is doubled while all other parameters remain constant, the energy carried by the wave becomes:","options":{"A":"2×","B":"4×","C":"√2×","D":"1/2×"},"answer":"B"},
+    {"id":20,"question":"For a capacitor of capacitance C charged to potential V, the energy stored in it is:","options":{"A":"½ C V²","B":"C V²","C":"½ V² / C","D":"C V² / 2"},"answer":"A"}
+  ],
+  "chemistry": [
+    {"id":1,"question":"What is the oxidation state of sulphur in H₂SO₄?","options":{"A":"+2","B":"+4","C":"+6","D":"−2"},"answer":"C"},
+    {"id":2,"question":"Which of the following is a strong acid?","options":{"A":"CH₃COOH","B":"HClO₄","C":"H₂CO₃","D":"H₃PO₄"},"answer":"B"},
+    {"id":3,"question":"If 2.8 g of a gas occupies 2.24 dm³ at STP, what is the relative molecular mass (RMM) of the gas?","options":{"A":"28","B":"32","C":"44","D":"56"},"answer":"A"},
+    {"id":4,"question":"Which hybridisation is present in the carbon atoms of C₂H₂ (ethyne)?","options":{"A":"sp³","B":"sp²","C":"sp","D":"sp³d"},"answer":"C"},
+    {"id":5,"question":"Which of these compounds is saturated hydrocarbon?","options":{"A":"Ethene","B":"Ethyne","C":"Ethane","D":"Ethanol"},"answer":"C"},
+    {"id":6,"question":"The process of separating crude oil into fractions is called:","options":{"A":"Cracking","B":"Reforming","C":"Fractional distillation","D":"Polymerisation"},"answer":"C"},
+    {"id":7,"question":"Which law states that equal volumes of gases, at same temperature and pressure, contain equal numbers of molecules?","options":{"A":"Boyle’s law","B":"Charles’s law","C":"Avogadro’s law","D":"Gay‑Lussac’s law"},"answer":"C"},
+    {"id":8,"question":"Which is NOT a typical example of a physical change?","options":{"A":"Melting ice","B":"Dissolving sugar in water","C":"Rusting iron","D":"Boiling water"},"answer":"C"},
+    {"id":9,"question":"In the reaction KMnO₄ + 8HCl → KCl + MnCl₂ + 4Cl₂ + 4H₂O, what role does KMnO₄ play?","options":{"A":"Reducing agent","B":"Oxidising agent","C":"Catalyst","D":"Acid"},"answer":"B"},
+    {"id":10,"question":"What is the empirical formula of a compound that contains 40 % C, 6.7 % H and 53.3 % O by mass?","options":{"A":"CH₂O","B":"C₂H₄O₂","C":"C₃H₆O₃","D":"CHO"},"answer":"A"},
+    {"id":11,"question":"Which of the following elements has the highest ionisation energy?","options":{"A":"Na","B":"Mg","C":"Al","D":"Ne"},"answer":"D"},
+    {"id":12,"question":"For the equilibrium 2A(g) + B(g) ⇌ 3C(g), which change will shift equilibrium to the right?","options":{"A":"Increase pressure","B":"Decrease volume","C":"Remove C","D":"Increase temperature"},"answer":"C"},
+    {"id":13,"question":"What is produced at the anode during the electrolysis of molten sodium chloride?","options":{"A":"Sodium metal","B":"Chlorine gas","C":"Hydrogen gas","D":"Oxygen gas"},"answer":"B"},
+    {"id":14,"question":"Which functional group is present in an ester?","options":{"A":"–OH","B":"–COOH","C":"–COO–","D":"–NH₂"},"answer":"C"},
+    {"id":15,"question":"Which of the following is a homologous series?","options":{"A":"Methane, Ethane, Propane","B":"Methanol, Ethanol, Propanol","C":"Ethene, Propene, Butene","D":"Ethanol, Ethanoic acid, Ethyl ethanoate"},"answer":"A"},
+    {"id":16,"question":"What is the pH of a neutral solution at 25 °C?","options":{"A":"6","B":"7","C":"8","D":"9"},"answer":"B"},
+    {"id":17,"question":"Which periodic trend decreases across a period from left to right among main‑group elements?","options":{"A":"Electronegativity","B":"Ionisation energy","C":"Atomic radius","D":"Electron affinity"},"answer":"C"},
+    {"id":18,"question":"Which of these is the best oxidising agent in acidic solution?","options":{"A":"Cl⁻","B":"MnO₄⁻","C":"Fe²⁺","D":"SO₃²⁻"},"answer":"B"},
+    {"id":19,"question":"Which of the following statements best describes Hess’s Law?","options":{"A":"The rate of reaction depends on activation energy.","B":"Heat change for a reaction is independent of the path taken.","C":"Equilibrium constant is constant at a given temperature.","D":"The pressure of a gas is inversely proportional to its volume."},"answer":"B"},
+    {"id":20,"question":"The IUPAC name for the compound CH₃CH₂CH(CH₃)₂ is:","options":{"A":"2‑methylbutane","B":"3‑methylbutane","C":"2‑methylpentane","D":"3‑methylpentane"},"answer":"A"}
+  ],
+  "biology": [
+    {"id":1,"question":"Which of the following is a correct sequence in the process of protein synthesis?","options":{"A":"DNA → mRNA → ribosome → polypeptide","B":"DNA → tRNA → codon → amino acid","C":"mRNA → DNA → ribosome → amino acid","D":"DNA → ribosome → mRNA → polypeptide"},"answer":"A"},
+    {"id":2,"question":"During which phase of meiosis do the homologous chromosomes separate and move to opposite poles?","options":{"A":"Prophase I","B":"Metaphase I","C":"Anaphase I","D":"Telophase I"},"answer":"C"},
+    {"id":3,"question":"Which of the following is **not** a function of the liver in mammals?","options":{"A":"Detoxification of harmful substances","B":"Storage of glycogen","C":"Production of bile","D":"Secretion of insulin"},"answer":"D"},
+    {"id":4,"question":"A population of insects increases rapidly until environmental resistance slows growth and the population size levels off. This is an example of which type of growth curve?","options":{"A":"Exponential (J‑shaped)","B":"Logistic (S‑shaped)","C":"Linear","D":"Declining"},"answer":"B"},
+    {"id":5,"question":"In the context of ecology, which term describes species that respond rapidly to environmental change and reproduce quickly?","options":{"A":"K‑strategists","B":"R‑strategists","C":"Endemics","D":"Specialists"},"answer":"B"},
+    {"id":6,"question":"Which of the following pairs of biomolecules is correctly matched with their monomer building blocks?","options":{"A":"Polysaccharide ‑ amino acid","B":"Protein ‑ nucleotide","C":"Nucleic acid ‑ nucleotide","D":"Lipid ‑ monosaccharide"},"answer":"C"},
+    {"id":7,"question":"In plants, the hormone gibberellin is most associated with which of the following processes?","options":{"A":"Inhibition of seed germination","B":"Stimulation of stem elongation","C":"Abscission of leaves","D":"Closure of stomata"},"answer":"B"},
+    {"id":8,"question":"Which structure in a chloroplast is the site of the light‑dependent reactions of photosynthesis?","options":{"A":"Stroma","B":"Thylakoid membrane","C":"Outer membrane","D":"Matrix"},"answer":"B"},
+    {"id":9,"question":"Which of the following best describes the action of an enzyme on its substrate?","options":{"A":"It raises the activation energy of the reaction","B":"It alters the equilibrium constant of the reaction","C":"It lowers the activation energy of the reaction","D":"It is consumed in the reaction"},"answer":"C"},
+    {"id":10,"question":"Which of these is the most likely reason for a high degree of biodiversity in the tropics compared to temperate regions?","options":{"A":"Lower productivity in the tropics","B":"Greater climatic stability and more niches","C":"Fewer species interactions in the tropics","D":"More frequent glaciation in the tropics"},"answer":"B"},
+    {"id":11,"question":"Which blood vessel type carries blood away from the heart under highest pressure?","options":{"A":"Veins","B":"Capillaries","C":"Arteries","D":"Venules"},"answer":"C"},
+    {"id":12,"question":"In genetics, what is the significance of a “carrier” of a recessive allele?","options":{"A":"They show the phenotype of the recessive trait","B":"They can transmit the allele without showing its phenotype","C":"They cannot transmit the allele","D":"They always express the dominant trait"]},"answer":"B"},
+    {"id":13,"question":"In prokaryotic cells, which of the following is absent?","options":{"A":"Ribosomes","B":"Plasma membrane","C":"Nucleus","D":"Cytoplasm"},"answer":"C"},
+    {"id":14,"question":"Which of the following best describes adaptive radiation?","options":{"A":"A single species evolves into several species to occupy different niches","B":"Two species evolve together through mutualism","C":"Species evolve in the same niche without divergence","D":"A species returns to ancestral traits over time"},"answer":"A"},
+    {"id":15,"question":"Which of these correctly shows the flow of water through a plant from soil to atmosphere?","options":{"A":"Soil → phloem → xylem → stomata","B":"Soil → xylem → leaf → stomata","C":"Soil → stomata → xylem → leaf","D":"Soil → leaf → xylem → phloem"},"answer":"B"},
+    {"id":16,"question":"In the human kidney, the functional unit is the nephron. Which region reabsorbs most of the glomerular filtrate?","options":{"A":"Proximal convoluted tubule","B":"Distal convoluted tubule","C":"Loop of Henle","D":"Collecting duct"},"answer":"A"},
+    {"id":"17","question":"Which of the following is a vestigial structure in humans?","options":{"A":"Appendix","B":"Pancreas","C":"Thyroid gland","D":"Liver"},"answer":"A"},
+    {"id":18,"question":"Which process increases genetic variation in a species?","options":{"A":"Cloning","B":"Asexual reproduction","C":"Independent assortment during meiosis","D":"Binary fission"},"answer":"C"},
+    {"id":19,"question":"Which term refers to the total of all genetic information in a population at a given time?","options":{"A":"Genome","B":"Gene pool","C":"Chromosome number","D":"Allele frequency"},"answer":"B"},
+    {"id":20,"question":"Which of these is **not** a characteristic of living organisms?","options":{"A":"Growth","B":"Metabolism","C":"Ability to replicate","D":"Radiate energy as light"},"answer":"D"}
+  ],
+  "geography": [
+    {"id":1,"question":"Which term describes the line on a map joining points of equal elevation above sea level?","options":{"A":"Contour line","B":"Isobar","C":"Isotherm","D":"Isohyet"},"answer":"A"},
+    {"id":2,"question":"The geoid shape of the Earth reflects which of the following?","options":{"A":"Perfect sphere","B":"Oblate spheroid","C":"Prolate spheroid","D":"Flat plane"},"answer":"B"},
+    {"id":3,"question":"Which of these is **not** a major element of the water cycle at the Earth’s surface?","options":{"A":"Evaporation","B":"Transpiration","C":"Sublimation","D":"Conduction"},"answer":"D"},
+    {"id":4,"question":"In Nigeria, which of the following is a significant cause of soil erosion in upland areas?","options":{"A":"River flooding","B":"Intensive bush‑burning","C":"Glacial retreat","D":"Tectonic uplift"},"answer":"B"},
+    {"id":5,"question":"Which climatic factor is most responsible for the high rainfall on the windward side of a mountain range?","options":{"A":"Latitude","B":"Orographic uplift","C":"Continentality","D":"Albedo effect"},"answer":"B"},
+    {"id":6,"question":"Which of the following best describes a “closed traverse” in surveying?","options":{"A":"A loop of survey lines returning to the starting point","B":"A survey line laid in a straight line only","C":"A survey with no angular measurements","D":"An open line from one fixed point to another"},"answer":"A"},
+    {"id":7,"question":"The major soil type developed on old crystalline rocks in tropical Nigeria is:","options":{"A":"Chernozem","B":"Laterite","C":"Podzol","D":"Tundra soil"},"answer":"B"},
+    {"id":8,"question":"Which of these human activities contributes least to the enlargement of urban heat islands?","options":{"A":"Deforestation for building sites","B":"Increased vegetation in parks","C":"Extensive use of dark‑roof materials","D":"High density of paved surfaces"},"answer":"B"},
+    {"id":9,"question":"Which transport mode in tropical Africa is most constrained by seasonal change in water level of rivers?","options":{"A":"Railways","B":"Roads","C":"Water‑borne (inland waterways)","D":"Cable car systems"},"answer":"C"},
+    {"id":10,"question":"Which map scale would most appropriately be used for showing the layout of a university campus in detail?","options":{"A":"1:10,000","B":"1:50,000","C":"1:250,000","D":"1:1,000,000"},"answer":"A"},
+    {"id":11,"question":"Which of the following is a consequence of a high population growth rate in a country?","options":{"A":"Increased dependency ratio","B":"Reduced labour force","C":"Increase in per capita income","D":"Decline in age‑structure youth segment"},"answer":"A"},
+    {"id":12,"question":"Which of the following best explains the pattern of tropical rainforest vegetation near the equator?","options":{"A":"Low rainfall, high altitude","B":"High rainfall, high temperature, no distinct dry season","C":"Cold winters, high rainfall","D":"Low temperature, seasonal drought"},"answer":"B"},
+    {"id":13,"question":"In the context of world trade, which commodity route is typical of export flows from Africa?","options":{"A":"Manufactured goods from Asia to Africa","B":"Raw minerals from Africa to industrialized Europe/North America","C":"Agricultural imports from Africa to North America","D":"Technology exports from Africa to Europe"},"answer":"B"},
+    {"id":14,"question":"Which of these phenomena is a direct indicator of isostatic adjustment in ocean basins?","options":{"A":"Tsunami wave height","B":"Mid‑ocean ridge elevation","C":"Sediment thinning on continental shelves","D":"Subsidence of land following glacial melting"},"answer":"D"},
+    {"id":15,"question":"Which of the following best represents a function of GIS (Geographic Information System) in geography?","options":{"A":"Analysing spatial relationships and patterns","B":"Measuring only linear distances manually","C":"Replacing all fieldwork permanently","D":"Printing maps exclusively"},"answer":"A"},
+    {"id":16,"question":"Which of these landforms would most likely result from fluvial deposition?","options":{"A":"Hanging valley","B":"Meander loop cutoff forming ox‑bow lake","C":"Cirque basin","D":"Volcanic crater"},"answer":"B"},
+    {"id":17,"question":"Which of the following is a **human‑induced** hazard that affects coastal zones in Nigeria?","options":{"A":"Tsunami","B":"Coastal erosion due to sand mining","C":"Volcanic eruption","D":"Tornado"},"answer":"B"},
+    {"id":18,"question":"In population geography, which term refers to movement of people from rural to urban areas?","options":{"A":"Emigration","B":"Urbanisation","C":"Immigration","D":"Transhumance"},"answer":"B"},
+    {"id":19,"question":"Which of these best defines the term “bearing” in map reading?","options":{"A":"Angle measured clockwise from north to the line","B":"The gradient of slope on a topographic map","C":"Difference between map scale and ground distance","D":"The altitude above sea‑level of a point"},"answer":"A"},
+    {"id":20,"question":"Which of the following is the main cause of deforestation in the tropical rain‑forest region of Nigeria?","options":{"A":"Permafrost melting","B":"Industrial heavy fossil‑fuel extraction","C":"Subsistence and commercial logging and farming","D":"Glacier retreat"},"answer":"C"}
+  ],
+  "government": [
+    {"id":1,"question":"Which of the following concepts refers to the legitimate right of a state to exercise supreme authority within its territory?","options":{"A":"Power","B":"Authority","C":"Sovereignty","D":"Legitimacy"},"answer":"C"},
+    {"id":2,"question":"A federation is characterised by which of the following?","options":{"A":"Central government holds all power and no sub‑units exist","B":"Sub‑units have residual powers and the central government controls everything","C":"Political power is constitutionally divided between central and sub‑units","D":"It always uses the presidential system"},"answer":"C"},
+    {"id":3,"question":"Which of these systems of government best describes a situation where the executive is drawn from and accountable to the legislature?","options":{"A":"Presidential system","B":"Parliamentary system","C":"Monarchy","D":"Military dictatorship"},"answer":"B"},
+    {"id":4,"question":"Which of the following political ideologies emphasises collective ownership of means of production and absence of social classes?","options":{"A":"Capitalism","B":"Socialism","C":"Fascism","D":"Liberalism"},"answer":"B"},
+    {"id":5,"question":"Which arm of government is primarily responsible for making laws in Nigeria?","options":{"A":"Executive","B":"Judiciary","C":"Legislature","D":"Civil Service"},"answer":"C"},
+    {"id":6,"question":"What is the meaning of “checks and balances” in a democratic government?","options":{"A":"One arm of government dominates others","B":"Each arm of government is completely independent and uninfluenced by others","C":"Each arm of government has some power over the others to prevent abuse","D":"The civil service oversees all political decisions"},"answer":"C"},
+    {"id":7,"question":"Which of these is NOT a type of constitution?","options":{"A":"Rigid constitution","B":"Flexible constitution","C":"Written constitution","D":"Non‑democratic constitution"},"answer":"D"},
+    {"id":8,"question":"Which term refers to a pressure group’s activity of influencing government decisions without seeking to win elections?","options":{"A":"Political party activism","B":"Lobbying","C":"Electoral campaign","D":"Referendum mobilisation"},"answer":"B"},
+    {"id":9,"question":"Which international organisation is primarily aimed at economic cooperation among West African states?","options":{"A":"United Nations (UN)","B":"Organization of Petroleum Exporting Countries (OPEC)","C":"Economic Community of West African States (ECOWAS)","D":"Commonwealth of Nations"},"answer":"C"},
+    {"id":10,"question":"Which of the following best defines citizenship by registration?","options":{"A":"Acquiring citizenship automatically by birth within a country’s territory","B":"Becoming citizen by virtue of descent from citizen parents outside the country","C":"A non‑citizen applying for and being granted citizenship after meeting certain criteria","D":"Citizenship obtained by conquest of territory"},"answer":"C"},
+    {"id":11,"question":"Which of the following accurately describes a unitary system of government?","options":{"A":"Sub‑national units derive their powers from the central government","B":"Sub‑units are sovereign and the central government holds a weak position","C":"Power is evenly divided constitutionally between central and sub‑units","D":"No central government exists"},"answer":"A"},
+    {"id":12,"question":"What is the main function of the judiciary in a democratic state?","options":{"A":"To enact laws","B":"To implement government policy","C":"To interpret laws and adjudicate disputes","D":"To organise elections"},"answer":"C"},
+    {"id":13,"question":"Which concept denotes the customs, beliefs, and institutions through which political socialisation takes place?","options":{"A":"Political culture","B":"Sovereignty","C":"Political party","D":"Legitimacy"},"answer":"A"},
+    {"id":14,"question":"Which of the following is a feature of democracy?","options":{"A":"Rule by a single individual with no checks","B":"Suppression of free expression","C":"Free and fair elections","D":"Absolute power in one arm of government"},"answer":"C"},
+    {"id":15,"question":"In Nigeria, which tier of government is constitutionally mandated to create bye‑laws and local policies tailored to local communities?","options":{"A":"Federal government","B":"State governments","C":"Local government councils","D":"Parastatals"},"answer":"C"},
+    {"id":16,"question":"What was the main aim of the 1999 Nigerian Constitution (as amended) in terms of government structure?","options":{"A":"To establish a one‑party state","B":"To replace the parliamentary system with a presidential system","C":"To abolish state governors","D":"To merge legislative and executive arms"},"answer":"B"},
+    {"id":17,"question":"Which of the following is an advantage of a multi‑party system?","options":{"A":"Limited choice for the electorate","B":"One party dominates perpetually","C":"Greater representation and more alternatives for voters","D":"Monopoly of power by the ruling party"},"answer":"C"},
+    {"id":18,"question":"Which of the following describes delegated legislation?","options":{"A":"Legislation passed directly by the legislature with no further authority","B":"Regulations made by an executive authority under powers given by the legislature","C":"Laws invalidated by the courts","D":"Primary legislation only"},"answer":"B"},
+    {"id":19,"question":"Which principle ensures that every citizen has protection of fundamental rights irrespective of origin, religion or gender?","options":{"A":"Separation of powers","B":"Rule of law","C":"Absolute majority rule","D":"Political patronage"},"answer":"B"},
+    {"id":20,"question":"In the context of Nigeria, what is the role of the civil service?","options":{"A":"To legislate and review laws","B":"To supervise political campaigns","C":"To implement government policies and advise ministers","D":"To adjudicate disputes"},"answer":"C"}
+  ],
+  "civic": [
+    {"id":1,"question":"Which of the following best defines civic education?","options":{"A":"Study of plant and animal life","B":"Study of citizens’ rights and duties in a society","C":"Study of physical geography","D":"Study of financial markets"},"answer":"B"},
+    {"id":2,"question":"Which of these is a fundamental duty of a Nigerian citizen under the 1999 Constitution?","options":{"A":"Right to commit any act without penalty","B":"Obligation to pay taxes and obey laws","C":"Right to monopolize resources","D":"Obligation to ignore government policies"},"answer":"B"},
+    {"id":3,"question":"Which principle ensures that no individual is above the law in Nigeria?","options":{"A":"Sovereignty","B":"Rule of law","C":"Absolute monarchy","D":"Majority rule"},"answer":"B"},
+    {"id":4,"question":"The separation of powers in government is meant to:","options":{"A":"Give unlimited power to the legislature","B":"Prevent abuse of power by distributing it among branches","C":"Combine judicial and executive powers","D":"Enhance political patronage"},"answer":"B"},
+    {"id":5,"question":"Which of the following best defines democracy?","options":{"A":"Government by a single ruler","B":"Government by the people for the people","C":"Government by military authority","D":"Government without elections"},"answer":"B"},
+    {"id":6,"question":"Which body is primarily responsible for conducting elections in Nigeria?","options":{"A":"The Judiciary","B":"The National Assembly","C":"Independent National Electoral Commission (INEC)","D":"The Executive Council"},"answer":"C"},
+    {"id":7,"question":"Which of these is a function of political parties in a democratic society?","options":{"A":"To organize free and fair elections","B":"To mobilize citizens and present policies for governance","C":"To enforce laws directly","D":"To censor media"},"answer":"B"},
+    {"id":8,"question":"Civil disobedience refers to:","options":{"A":"Obeying all laws blindly","B":"Peaceful refusal to obey unjust laws","C":"Violent overthrow of government","D":"Ignoring civic duties"},"answer":"B"},
+    {"id":9,"question":"Which of the following best describes human rights?","options":{"A":"Privileges granted by the government to certain groups","B":"Rights inherent to every individual by virtue of being human","C":"Rights that only adults enjoy","D":"Rights that are negotiable at the discretion of rulers"},"answer":"B"},
+    {"id":10,"question":"Which of these is a key value promoted by civic education?","options":{"A":"Indiscipline","B":"Tolerance and respect for others","C":"Corruption","D":"Nepotism"},"answer":"B"},
+    {"id":11,"question":"Which of the following is a right guaranteed under the Nigerian Constitution?","options":{"A":"Right to arbitrary detention without trial","B":"Right to freedom of expression and assembly","C":"Right to avoid paying taxes","D":"Right to commit crime without penalty"},"answer":"B"},
+    {"id":12,"question":"Which civic responsibility requires citizens to participate in national development by voting?","options":{"A":"Political apathy","B":"Political participation","C":"Obedience to decrees","D":"Non‑involvement"},"answer":"B"},
+    {"id":13,"question":"Which of these is a consequence of civic irresponsibility?","options":{"A":"Enhanced social cohesion","B":"Breakdown of law and order","C":"Better governance","D":"Increased citizen participation"},"answer":"B"},
+    {"id":14,"question":"Which Nigerian document contains the fundamental rights and responsibilities of citizens?","options":{"A":"The Penal Code","B":"The 1999 Constitution of the Federal Republic of Nigeria","C":"The Electoral Act","D":"The Local Government Act"},"answer":"B"},
+    {"id":15,"question":"Which principle ensures fairness and equality before the law?","options":{"A":"Arbitrary governance","B":"Justice","C":"Patronage","D":"Oligarchy"},"answer":"B"},
+    {"id":16,"question":"Which of the following promotes civic consciousness among citizens?","options":{"A":"Political education and awareness campaigns","B":"Censorship of information","C":"Suppression of public opinion","D":"Unregulated propaganda"},"answer":"A"},
+    {"id":17,"question":"Which of these is a characteristic of a responsible citizen?","options":{"A":"Obeying laws and paying taxes","B":"Disregarding social norms","C":"Participating in violence","D":"Engaging in corruption"},"answer":"A"},
+    {"id":18,"question":"Which international document protects human rights globally?","options":{"A":"Universal Declaration of Human Rights (UDHR)","B":"Magna Carta","C":"The Communist Manifesto","D":"The Napoleonic Code"},"answer":"A"},
+    {"id":19,"question":"Which of these civic activities contributes to national development?","options":{"A":"Voting in elections","B":"Bribery","C":"Vandalism","D":"Disobedience"},"answer":"A"},
+    {"id":20,"question":"Which of these is an example of political apathy?","options":{"A":"Actively engaging in community development","B":"Refusing to participate in elections","C":"Volunteering in civic programmes","D":"Educating others about their rights"},"answer":"B"}
+  ],
+  "economics_hard": [
+    {"id":1,"question":"Which of the following best defines scarcity in economics?","options":{"A":"Unlimited resources for limited wants","B":"Limited resources for unlimited wants","C":"Unlimited wants and unlimited resources","D":"Limited wants and limited resources"},"answer":"B"},
+    {"id":2,"question":"Which of these is a primary factor of production?","options":{"A":"Capital","B":"Labour","C":"Entrepreneurship","D":"Money"},"answer":"B"},
+    {"id":3,"question":"When a country imports more than it exports, it is experiencing:","options":{"A":"Balance of trade","B":"Trade surplus","C":"Trade deficit","D":"Equilibrium"},"answer":"C"},
+    {"id":4,"question":"Which type of unemployment occurs due to seasonal changes in demand?","options":{"A":"Frictional unemployment","B":"Structural unemployment","C":"Seasonal unemployment","D":"Cyclical unemployment"},"answer":"C"},
+    {"id":5,"question":"Inflation is best described as:","options":{"A":"A general rise in the price level of goods and services","B":"A fall in the value of money only","C":"A decrease in demand for goods","D":"A rise in unemployment"}},"answer":"A"},
+    {"id":6,"question":"Which of the following is a function of money?","options":{"A":"Medium of exchange, store of value, unit of account","B":"Only a medium of exchange","C":"Only a unit of account","D":"Only a standard of living"},"answer":"A"},
+    {"id":7,"question":"Which market structure is characterised by a single seller and high barriers to entry?","options":{"A":"Perfect competition","B":"Monopoly","C":"Oligopoly","D":"Monopolistic competition"},"answer":"B"},
+    {"id":8,"question":"Which of these best illustrates opportunity cost?","options":{"A":"The price paid for a product","B":"The benefit forgone by choosing one alternative over another","C":"The total cost of production","D":"The market value of all resources"},"answer":"B"},
+    {"id":9,"question":"Which of these is a direct tax?","options":{"A":"Value Added Tax (VAT)","B":"Customs duty","C":"Personal income tax","D":"Excise duty"},"answer":"C"},
+    {"id":10,"question":"Which monetary policy tool is used by a central bank to reduce inflation?","options":{"A":"Decrease interest rates","B":"Increase government spending","C":"Increase interest rates","D":"Subsidise industries"},"answer":"C"},
+    {"id":11,"question":"Which of the following best defines gross domestic product (GDP)?","options":{"A":"Total exports of a country","B":"Total income earned by nationals abroad","C":"Market value of all final goods and services produced within a country in a year","D":"Total population of a country"},"answer":"C"},
+    {"id":12,"question":"Which of the following is an example of fiscal policy?","options":{"A":"Adjusting the interest rate","B":"Government changing taxation and public expenditure","C":"Central bank controlling money supply","D":"Setting import tariffs only"},"answer":"B"},
+    {"id":13,"question":"Which of the following represents a positive economic statement?","options":{"A":"Government should reduce poverty","B":"Increasing minimum wage may increase unemployment","C":"The government must provide free healthcare","D":"It is wrong to reduce taxes"},"answer":"B"},
+    {"id":14,"question":"What is the main purpose of a central bank in an economy?","options":{"A":"To provide loans to private citizens only","B":"To regulate money supply and maintain price stability","C":"To collect taxes","D":"To control international trade alone"},"answer":"B"},
+    {"id":15,"question":"Which of these is a characteristic of a perfectly competitive market?","options":{"A":"Single seller","B":"Homogeneous products and free entry/exit","C":"Price makers","D":"High barriers to entry"},"answer":"B"},
+    {"id":16,"question":"Which of the following best explains the law of demand?","options":{"A":"Quantity demanded rises as price rises","B":"Quantity demanded falls as price falls","C":"Quantity demanded falls as price rises, ceteris paribus","D":"Price has no effect on quantity demanded"},"answer":"C"},
+    {"id":17,"question":"Which of these is NOT a determinant of supply?","options":{"A":"Production cost","B":"Technology","C":"Consumer taste","D":"Price of related goods"},"answer":"C"},
+    {"id":18,"question":"Which of these is an example of a capital-intensive industry?","options":{"A":"Agriculture with manual labour","B":"Cement manufacturing with machines","C":"Handmade crafts","D":"Street vending"},"answer":"B"},
+    {"id":19,"question":"Which of these statements about exchange rates is correct?","options":{"A":"A depreciation of a currency increases the domestic purchasing power","B":"An appreciation of a currency makes exports cheaper abroad","C":"A depreciation of a currency makes exports cheaper abroad","D":"Currency value has no effect on trade"},"answer":"C"},
+    {"id":20,"question":"Which of the following best defines economic development?","options":{"A":"Increase in population only","B":"Sustained increase in a country’s output and improvement in living standards","C":"Increase in exports only","D":"Accumulation of money by few individuals"},"answer":"B"}
+  ],
+  "accounting": [
+    {"id":1,"question":"Which of the following is an example of a liability?","options":{"A":"Cash in hand","B":"Accounts payable","C":"Equipment","D":"Owner’s capital"},"answer":"B"},
+    {"id":2,"question":"The accounting equation is:","options":{"A":"Assets = Liabilities + Owner’s Equity","B":"Assets + Liabilities = Capital","C":"Revenue – Expenses = Profit","D":"Assets – Liabilities = Revenue"},"answer":"A"},
+    {"id":3,"question":"Which of the following best defines double-entry bookkeeping?","options":{"A":"Recording only cash transactions","B":"Every transaction affects at least two accounts","C":"Keeping a single ledger","D":"Recording revenue only"},"answer":"B"},
+    {"id":4,"question":"Which of these is an example of a capital expenditure?","options":{"A":"Repairing a broken machine","B":"Purchasing a new building","C":"Paying salaries","D":"Buying office stationery"},"answer":"B"},
+    {"id":5,"question":"Depreciation is:","options":{"A":"The increase in asset value over time","B":"The allocation of the cost of a fixed asset over its useful life","C":"Payment of liabilities","D":"Revenue earned"},"answer":"B"},
+    {"id":6,"question":"Which financial statement shows the financial position of a business at a specific date?","options":{"A":"Income statement","B":"Balance sheet","C":"Cash flow statement","D":"Trial balance"},"answer":"B"},
+    {"id":7,"question":"Which of the following is NOT a current asset?","options":{"A":"Cash in hand","B":"Inventory","C":"Accounts receivable","D":"Machinery"},"answer":"D"},
+    {"id":8,"question":"The purchase of goods on credit would be recorded as:","options":{"A":"Debit Purchases, Credit Cash","B":"Debit Purchases, Credit Accounts Payable","C":"Debit Cash, Credit Purchases","D":"Debit Accounts Receivable, Credit Purchases"},"answer":"B"},
+    {"id":9,"question":"Which account is debited when a company receives cash from a customer for a previous credit sale?","options":{"A":"Cash","B":"Sales","C":"Accounts Receivable","D":"Accounts Payable"},"answer":"A"},
+    {"id":10,"question":"Which of these is an example of an expense?","options":{"A":"Accounts payable","B":"Salaries paid to staff","C":"Owner’s capital","D":"Equipment"},"answer":"B"},
+    {"id":11,"question":"Which of the following best defines a trial balance?","options":{"A":"A financial statement showing assets and liabilities","B":"A summary of ledger balances to check arithmetical accuracy","C":"A list of all cash transactions","D":"A record of stock movements"},"answer":"B"},
+    {"id":12,"question":"Which of these errors will not affect the trial balance agreement?","options":{"A":"Omission of a transaction from the ledger","B":"Double posting in the ledger","C":"Incorrect addition of a ledger account","D":"Transposition of figures in one account"},"answer":"A"},
+    {"id":13,"question":"Which principle states that revenue should be recognized when earned, not necessarily when cash is received?","options":{"A":"Matching principle","B":"Revenue recognition principle","C":"Consistency principle","D":"Prudence principle"},"answer":"B"},
+    {"id":14,"question":"The payment of rent in advance is classified as:","options":{"A":"Liability","B":"Current asset","C":"Revenue","D":"Capital expenditure"},"answer":"B"},
+    {"id":15,"question":"Which of these is a feature of a sole proprietorship?","options":{"A":"Limited liability","B":"Ownership by one person","C":"Owned by shareholders","D":"Managed by board of directors"},"answer":"B"},
+    {"id":16,"question":"Which account is credited when the owner introduces additional capital into the business?","options":{"A":"Cash","B":"Owner’s capital","C":"Drawings","D":"Revenue"},"answer":"B"},
+    {"id":17,"question":"Which of the following statements best defines accrual accounting?","options":{"A":"Recording only cash transactions","B":"Recognizing revenues and expenses when they occur, not when cash is received or paid","C":"Recording transactions only at the end of the year","D":"Recording only assets and liabilities"},"answer":"B"},
+    {"id":18,"question":"Bad debts are treated as:","options":{"A":"Asset","B":"Expense","C":"Liability","D":"Revenue"},"answer":"B"},
+    {"id":19,"question":"Which financial statement shows the profitability of a business over a period of time?","options":{"A":"Balance sheet","B":"Income statement","C":"Statement of financial position","D":"Trial balance"},"answer":"B"},
+    {"id":20,"question":"Which account is debited when the business purchases stationery on credit?","options":{"A":"Stationery","B":"Accounts Payable","C":"Cash","D":"Revenue"},"answer":"A"}
+  ],
+  "commerce_hard": [
+    {"id":1,"question":"Which of the following best defines commerce?","options":{"A":"Production of goods and services","B":"Distribution of goods and services","C":"Exchange of goods and services","D":"Consumption of goods and services"},"answer":"C"},
+    {"id":2,"question":"Which of these is a primary function of commerce?","options":{"A":"Manufacturing goods","B":"Facilitating trade and distribution","C":"Setting market prices","D":"Providing education"},"answer":"B"},
+    {"id":3,"question":"Which of the following is a form of trade where goods are sold within the same country?","options":{"A":"International trade","B":"Internal trade","C":"Export trade","D":"Import trade"},"answer":"B"},
+    {"id":4,"question":"Which type of trade is concerned with buying and selling of goods across national borders?","options":{"A":"Domestic trade","B":"International trade","C":"Retail trade","D":"Wholesale trade"},"answer":"B"},
+    {"id":5,"question":"Which of the following best defines e-commerce?","options":{"A":"Trading goods and services using digital platforms","B":"Selling only physical products in markets","C":"Marketing without technology","D":"Import and export of commodities"},"answer":"A"},
+    {"id":6,"question":"Which of the following is a form of wholesale trade?","options":{"A":"Retailing to final consumers","B":"Selling large quantities to retailers","C":"Street vending","D":"Direct selling to customers"},"answer":"B"},
+    {"id":7,"question":"Which of these is an example of a service industry?","options":{"A":"Textile manufacturing","B":"Banking","C":"Agriculture","D":"Mining"},"answer":"B"},
+    {"id":8,"question":"Which of these is an advantage of branding for a business?","options":{"A":"Increases customer loyalty and recognition","B":"Reduces production costs automatically","C":"Eliminates competition","D":"Removes the need for advertising"},"answer":"A"},
+    {"id":9,"question":"Which type of business organisation is owned by shareholders and has limited liability?","options":{"A":"Sole proprietorship","B":"Partnership","C":"Private or public limited company","D":"Cooperative society"},"answer":"C"},
+    {"id":10,"question":"Which of the following best describes a cooperative society?","options":{"A":"Owned and controlled by shareholders for profit","B":"Owned and operated by members for mutual benefit","C":"Managed by the government alone","D":"Solely concerned with imports"},"answer":"B"},
+    {"id":11,"question":"Which of these is a function of advertising in commerce?","options":{"A":"Reducing quality of goods","B":"Informing, persuading, and reminding customers","C":"Increasing taxes","D":"Replacing the need for sales personnel"},"answer":"B"},
+    {"id":12,"question":"Which of these is a function of transportation in commerce?","options":{"A":"Reduces time and distance between producers and consumers","B":"Creates new products","C":"Eliminates competition","D":"Controls monetary policy"},"answer":"A"},
+    {"id":13,"question":"Which of the following is an example of retail trade?","options":{"A":"Selling goods in bulk to wholesalers","B":"Selling goods in small quantities to final consumers","C":"Exporting goods abroad","D":"Manufacturing goods"},"answer":"B"},
+    {"id":14,"question":"Which document is issued by a seller to a buyer showing the goods sold, prices, and total amount payable?","options":{"A":"Invoice","B":"Receipt","C":"Waybill","D":"Purchase order"},"answer":"A"},
+    {"id":15,"question":"Which of the following best defines insurance?","options":{"A":"Buying goods at a low price","B":"Protection against financial loss or risk","C":"Making profit through speculation","D":"Transporting goods to consumers"},"answer":"B"},
+    {"id":16,"question":"Which of these best explains the role of warehousing in commerce?","options":{"A":"Manufacturing goods","B":"Storing goods safely before sale or distribution","C":"Advertising products","D":"Controlling market prices"},"answer":"B"},
+    {"id":17,"question":"Which type of trade involves both wholesale and retail components?","options":{"A":"Internal trade","B":"External trade","C":"Mixed trade","D":"Direct trade"},"answer":"C"},
+    {"id":18,"question":"Which of the following is a benefit of international trade?","options":{"A":"Reduces access to foreign markets","B":"Encourages specialization and increases variety of goods","C":"Limits foreign competition","D":"Eliminates the need for domestic production"},"answer":"B"},
+    {"id":19,"question":"Which type of business organisation is easiest to set up and operate by a single person?","options":{"A":"Sole proprietorship","B":"Partnership","C":"Limited liability company","D":"Cooperative society"},"answer":"A"},
+    {"id":20,"question":"Which of these is a disadvantage of sole proprietorship?","options":{"A":"Owner enjoys all profits","B":"Limited capital and unlimited liability","C":"Simple to manage","D":"Full control by owner"},"answer":"B"}
+  ],
+  "literature_hard": [
+    {"id":1,"question":"Which of the following best defines the term ‘protagonist’ in a literary work?","options":{"A":"The main character or hero of the story","B":"The villain of the story","C":"A minor character","D":"The narrator"},"answer":"A"},
+    {"id":2,"question":"In literature, which device involves giving human qualities to non-human things?","options":{"A":"Simile","B":"Personification","C":"Metaphor","D":"Alliteration"},"answer":"B"},
+    {"id":3,"question":"Which of these is an example of a narrative poem?","options":{"A":"Elegy","B":"Ballad","C":"Sonnet","D":"Limerick"},"answer":"B"},
+    {"id":4,"question":"Which term refers to a recurring idea, image, or motif in a literary work?","options":{"A":"Theme","B":"Symbolism","C":"Motif","D":"Plot"},"answer":"C"},
+    {"id":5,"question":"In drama, what is the ‘denouement’?","options":{"A":"The climax of the play","B":"The final resolution or conclusion","C":"The introduction of characters","D":"A monologue"},"answer":"B"},
+    {"id":6,"question":"Which of the following best defines ‘satire’ in literature?","options":{"A":"A humorous or critical work exposing human folly","B":"A tragic play","C":"A narrative poem","D":"A romantic novel"},"answer":"A"},
+    {"id":7,"question":"Which figure of speech compares two unlike things using ‘like’ or ‘as’?","options":{"A":"Metaphor","B":"Simile","C":"Personification","D":"Hyperbole"},"answer":"B"},
+    {"id":8,"question":"Which of these is a characteristic of a tragedy in literature?","options":{"A":"Happy ending with comic relief","B":"Depicts the downfall of the protagonist due to a fatal flaw","C":"Has no central conflict","D":"Focuses on minor characters"},"answer":"B"},
+    {"id":9,"question":"Which term describes the sequence of events in a story?","options":{"A":"Plot","B":"Theme","C":"Setting","D":"Conflict"},"answer":"A"},
+    {"id":10,"question":"Which literary device involves exaggeration for emphasis or effect?","options":{"A":"Irony","B":"Hyperbole","C":"Metaphor","D":"Symbolism"},"answer":"B"},
+    {"id":11,"question":"Which of the following best defines ‘theme’ in a literary work?","options":{"A":"The sequence of events","B":"The central idea or underlying message","C":"The physical location of the story","D":"The minor characters"},"answer":"B"},
+    {"id":12,"question":"In a novel, which character type serves to contrast with the protagonist to highlight particular qualities?","options":{"A":"Foil","B":"Antagonist","C":"Flat character","D":"Dynamic character"},"answer":"A"},
+    {"id":13,"question":"Which type of poetry has a fixed form of 14 lines, often in iambic pentameter?","options":{"A":"Sonnet","B":"Ballad","C":"Elegy","D":"Ode"},"answer":"A"},
+    {"id":14,"question":"Which of the following is a feature of modernist literature?","options":{"A":"Focus on traditional social values","B":"Experimentation with form and narrative style","C":"Linear, chronological storytelling","D":"Simplistic language and rhyme"},"answer":"B"},
+    {"id":15,"question":"Which literary device involves a contrast between expectation and reality?","options":{"A":"Irony","B":"Simile","C":"Personification","D":"Allegory"},"answer":"A"},
+    {"id":16,"question":"Which of these best describes a ‘narrator’ in literature?","options":{"A":"The main villain","B":"The storyteller or voice telling the story","C":"A minor character","D":"The protagonist’s friend"},"answer":"B"},
+    {"id":17,"question":"Which of the following is a dramatic device where a character speaks to the audience without other characters hearing?","options":{"A":"Dialogue","B":"Monologue","C":"Soliloquy","D":"Chorus"},"answer":"C"},
+    {"id":18,"question":"In literature, a symbol is:","options":{"A":"A character who causes conflict","B":"An object, character, or action that represents a larger idea","C":"The main event of the plot","D":"A minor setting"},"answer":"B"},
+    {"id":19,"question":"Which term refers to a character who changes significantly throughout the story?","options":{"A":"Static character","B":"Dynamic character","C":"Flat character","D":"Foil"},"answer":"B"},
+    {"id":20,"question":"Which type of irony occurs when the audience knows something that the characters do not?","options":{"A":"Situational irony","B":"Verbal irony","C":"Dramatic irony","D":"Cosmic irony"},"answer":"C"}
+  ],
+  "yoruba_hard": [
+    {"id":1,"question":"Ẹ̀dá wo ni a ń pè ní ‘Àròkọ’ ní Yorùbá?","options":{"A":"Òwe","B":"Ìtàn","C":"Ìtàn àròkọ","D":"Ẹ̀sùn"},"answer":"C"},
+    {"id":2,"question":"Kí ni itumọ ọrọ Yorùbá “Ẹ̀kó ni ọ̀rẹ́ ọkùnrin”?","options":{"A":"Education is a friend of man","B":"Knowledge is power","C":"Learning is fun","D":"Wisdom is wealth"},"answer":"A"},
+    {"id":3,"question":"Àwọn ọmọ Yorùbá ní ìlú wo ni a ti mọ̀ sí olú ìlú ìṣèjọba wọn?","options":{"A":"Ibadan","B":"Ile‑Ife","C":"Oyo","D":"Lagos"},"answer":"B"},
+    {"id":4,"question":"Kí ni ìtumọ̀ ọ̀rọ̀ “Òwe”?","options":{"A":"Proverb","B":"Story","C":"Song","D":"Riddle"},"answer":"A"},
+    {"id":5,"question":"Ẹ̀dá wo ni a máa ń lo láti fi kà ìtàn Yorùbá lọ́rọ̀ ní ìjọba àtijọ́?","options":{"A":"Àlùfáà","B":"Àlákóso","C":"Bàbáláwo","D":"Ọmọ-ogun"},"answer":"C"},
+    {"id":6,"question":"Kí ni itumọ̀ ọ̀rọ̀ “Àṣà” ní Yorùbá?","options":{"A":"Culture","B":"Wealth","C":"Tradition","D":"Law"},"answer":"A"},
+    {"id":7,"question":"Kí ni ìtumọ̀ ọ̀rọ̀ “Ìtàn” ní Yorùbá?","options":{"A":"History or Story","B":"Wisdom","C":"Law","D":"Custom"},"answer":"A"},
+    {"id":8,"question":"Àwọn Yorùbá ní ìtàn tí ń kọ́ ọ̀dọ́ ọmọ ní ìwà, ìjọba, àti àṣà. Ẹ̀dá wo ni wọ́n ń pè ní?","options":{"A":"Òwe","B":"Àlàyé","C":"Ìtàn ẹ̀kọ́","D":"Orin"},"answer":"C"},
+    {"id":9,"question":"Kí ni itumọ̀ ọ̀rọ̀ “Ìbàdàn” ní Yorùbá?","options":{"A":"A city in Yoruba land","B":"A proverb","C":"A festival","D":"A type of dance"},"answer":"A"},
+    {"id":10,"question":"Kí ni ìtumọ̀ ọ̀rọ̀ “Bàbá” ní Yorùbá?","options":{"A":"Father","B":"Mother","C":"Uncle","D":"Teacher"},"answer":"A"},
+    {"id":11,"question":"Kí ni ọ̀rọ̀ “Ẹ̀kọ́” túmọ̀ sí ní Yorùbá?","options":{"A":"Wisdom","B":"Learning/Education","C":"Tradition","D":"Custom"},"answer":"B"},
+    {"id":12,"question":"Ẹ̀dá wo ni a ń pè ní 'Orin ìbílẹ̀' ní Yorùbá?","options":{"A":"Traditional song","B":"Dance","C":"Poem","D":"Story"},"answer":"A"},
+    {"id":13,"question":"Àwọn Yorùbá ní ọ̀pọ̀ àṣà láti fi ṣàpẹẹrẹ ìbá, ìjọba, àti ìwà rere. Ẹ̀dá wo ni wọ́n ń pè ní?","options":{"A":"Ìlànà","B":"Àṣà","C":"Ìdánilẹ́kọ","D":"Ìtàn"},"answer":"B"},
+    {"id":14,"question":"Kí ni itumọ̀ ọ̀rọ̀ “Ọmọ” ní Yorùbá?","options":{"A":"Child","B":"Parent","C":"Relative","D":"Friend"},"answer":"A"},
+    {"id":15,"question":"Kí ni ọ̀rọ̀ “Ọmọ‑olú” túmọ̀ sí ní Yorùbá?","options":{"A":"Native child","B":"Stranger","C":"King’s child","D":"Warrior"},"answer":"A"},
+    {"id":16,"question":"Kí ni ìtumọ̀ ọ̀rọ̀ “Àlàyé” ní Yorùbá?","options":{"A":"Exposition/Explanation","B":"Proverb","C":"History","D":"Wisdom"},"answer":"A"},
+    {"id":17,"question":"Ẹ̀dá wo ni a ń pè ní ‘Òwe’ tí ń kọ́ ọ̀dọ́ ọmọ ní ìwà rere?","options":{"A":"Proverb","B":"Riddle","C":"Story","D":"Song"},"answer":"A"},
+    {"id":18,"question":"Kí ni ìtumọ̀ ọ̀rọ̀ “Ìjọba” ní Yorùbá?","options":{"A":"Government","B":"Family","C":"Trade","D":"Market"},"answer":"A"},
+    {"id":19,"question":"Kí ni itumọ̀ ọ̀rọ̀ “Orin” ní Yorùbá?","options":{"A":"Song","B":"Dance","C":"Story","D":"Poem"},"answer":"A"},
+    {"id":20,"question":"Ẹ̀dá wo ni a máa ń lo láti kọ́ àtúmọ̀ òwe sí ẹ̀dá míì?","options":{"A":"Àlàyé","B":"Orin","C":"Ìtàn","D":"Ìdánilẹ́kọ"},"answer":"A"}
+  ],
+  "crs": [
+    {"id":1,"question":"Who was the first human created by God according to the Bible?","options":{"A":"Abel","B":"Adam","C":"Noah","D":"Moses"},"answer":"B"},
+    {"id":2,"question":"Which of these is considered the first book of the Bible?","options":{"A":"Exodus","B":"Genesis","C":"Leviticus","D":"Numbers"},"answer":"B"},
+    {"id":3,"question":"Who built the ark to survive the great flood?","options":{"A":"Abraham","B":"Moses","C":"Noah","D":"David"},"answer":"C"},
+    {"id":4,"question":"Which commandment teaches us not to steal?","options":{"A":"Fourth","B":"Sixth","C":"Eighth","D":"Tenth"},"answer":"C"},
+    {"id":5,"question":"Who led the Israelites out of Egypt?","options":{"A":"Joshua","B":"Moses","C":"Aaron","D":"David"},"answer":"B"},
+    {"id":6,"question":"Which fruit did Adam and Eve eat in the Garden of Eden?","options":{"A":"Apple","B":"Fig","C":"The Bible does not specify","D":"Pomegranate"},"answer":"C"},
+    {"id":7,"question":"Who was thrown into the lions’ den for praying to God?","options":{"A":"Daniel","B":"Joseph","C":"Elijah","D":"Samuel"},"answer":"A"},
+    {"id":8,"question":"Which prophet was swallowed by a great fish?","options":{"A":"Isaiah","B":"Jonah","C":"Elijah","D":"Jeremiah"},"answer":"B"},
+    {"id":9,"question":"The Sermon on the Mount was delivered by which person?","options":{"A":"Moses","B":"Jesus Christ","C":"John the Baptist","D":"Paul"},"answer":"B"},
+    {"id":10,"question":"Which parable teaches about the importance of forgiveness?","options":{"A":"Parable of the Sower","B":"Parable of the Prodigal Son","C":"Parable of the Talents","D":"Parable of the Rich Fool"},"answer":"B"},
+    {"id":11,"question":"Who betrayed Jesus for thirty pieces of silver?","options":{"A":"Peter","B":"Judas Iscariot","C":"Thomas","D":"John"},"answer":"B"},
+    {"id":12,"question":"Which book of the Bible records the creation story?","options":{"A":"Genesis","B":"Exodus","C":"Leviticus","D":"Numbers"},"answer":"A"},
+    {"id":13,"question":"What is the main message of the Ten Commandments?","options":{"A":"Wealth and power","B":"Moral and spiritual guidance","C":"Rules of war","D":"Sacrificial offerings only"},"answer":"B"},
+    {"id":14,"question":"Who interpreted Pharaoh’s dreams in Egypt?","options":{"A":"Daniel","B":"Joseph","C":"Moses","D":"Elijah"},"answer":"B"},
+    {"id":15,"question":"Which apostle is known as the ‘rock’ on which the Church is built?","options":{"A":"Paul","B":"Peter","C":"James","D":"John"},"answer":"B"},
+    {"id":16,"question":"Who was the mother of Jesus Christ?","options":{"A":"Mary Magdalene","B":"Elizabeth","C":"Mary","D":"Anna"},"answer":"C"},
+    {"id":17,"question":"Which prophet confronted King Ahab and Queen Jezebel over idol worship?","options":{"A":"Elijah","B":"Isaiah","C":"Jeremiah","D":"Samuel"},"answer":"A"},
+    {"id":18,"question":"Which miracle involved Jesus feeding five thousand people?","options":{"A":"Walking on water","B":"Turning water into wine","C":"Feeding with five loaves and two fish","D":"Healing the blind man"},"answer":"C"},
+    {"id":19,"question":"What is the first commandment?","options":{"A":"Thou shalt not steal","B":"Thou shalt have no other gods before Me","C":"Honor thy father and mother","D":"Thou shalt not kill"},"answer":"B"},
+    {"id":20,"question":"Which event is celebrated as the resurrection of Jesus Christ?","options":{"A":"Christmas","B":"Easter","C":"Pentecost","D":"Good Friday"},"answer":"B"}
+{
+  "irs": [
+    {"id":1,"question":"Who is regarded as the last prophet in Islam?","options":{"A":"Prophet Musa (Moses)","B":"Prophet Isa (Jesus)","C":"Prophet Muhammad (SAW)","D":"Prophet Ibrahim (Abraham)"},"answer":"C"},
+    {"id":2,"question":"Which of the following is the holy book of Islam?","options":{"A":"Bible","B":"Torah","C":"Qur’an","D":"Vedas"},"answer":"C"},
+    {"id":3,"question":"What is the first pillar of Islam?","options":{"A":"Salah (Prayer)","B":"Shahada (Faith declaration)","C":"Zakat (Almsgiving)","D":"Sawm (Fasting)"},"answer":"B"},
+    {"id":4,"question":"Which city is the birthplace of Prophet Muhammad (SAW)?","options":{"A":"Medina","B":"Jerusalem","C":"Mecca","D":"Baghdad"},"answer":"C"},
+    {"id":5,"question":"What is the meaning of 'Salah' in Islam?","options":{"A":"Fasting","B":"Almsgiving","C":"Prayer","D":"Pilgrimage"},"answer":"C"},
+    {"id":6,"question":"Which month do Muslims observe fasting from dawn to sunset?","options":{"A":"Muharram","B":"Ramadan","C":"Shawwal","D":"Dhul-Hijjah"},"answer":"B"},
+    {"id":7,"question":"What is 'Zakat' in Islam?","options":{"A":"Prayer","B":"Charity given to the needy","C":"Pilgrimage","D":"Fasting"},"answer":"B"},
+    {"id":8,"question":"Which of these is the direction Muslims face when praying?","options":{"A":"Medina","B":"Jerusalem","C":"Ka’aba in Mecca","D":"Cairo"},"answer":"C"},
+    {"id":9,"question":"Which of the following is the last month of the Islamic lunar calendar?","options":{"A":"Ramadan","B":"Muharram","C":"Dhul-Hijjah","D":"Safar"},"answer":"C"},
+    {"id":10,"question":"What is the meaning of 'Sawm'?","options":{"A":"Almsgiving","B":"Fasting","C":"Prayer","D":"Faith declaration"},"answer":"B"},
+    {"id":11,"question":"Which of these is an obligation of Hajj?","options":{"A":"Charity only","B":"Travel to Medina","C":"Pilgrimage to Mecca","D":"Fasting every month"},"answer":"C"},
+    {"id":12,"question":"Who received revelations from Allah that form the Qur’an?","options":{"A":"Prophet Isa (Jesus)","B":"Prophet Musa (Moses)","C":"Prophet Muhammad (SAW)","D":"Prophet Ibrahim (Abraham)"},"answer":"C"},
+    {"id":13,"question":"Which angel brought the revelations of Allah to Prophet Muhammad (SAW)?","options":{"A":"Israfil","B":"Jibril (Gabriel)","C":"Mikail (Michael)","D":"Izra’il"},"answer":"B"},
+    {"id":14,"question":"Which of these is considered a major sin in Islam?","options":{"A":"Saying Bismillah","B":"Shirk (associating partners with Allah)","C":"Praying Salah","D":"Fasting Ramadan)"},"answer":"B"},
+    {"id":15,"question":"What does 'Hijrah' refer to in Islamic history?","options":{"A":"Birth of Prophet Muhammad","B":"Migration from Mecca to Medina","C":"Battle of Badr","D":"Night journey to Jerusalem"},"answer":"B"},
+    {"id":16,"question":"Which chapter is the longest in the Qur’an?","options":{"A":"Al-Baqarah","B":"Al-Fatiha","C":"Al-Ikhlas","D":"An-Nas"},"answer":"A"},
+    {"id":17,"question":"What is the meaning of 'Tawheed' in Islam?","options":{"A":"Charity","B":"Oneness of Allah","C":"Pilgrimage","D":"Fasting"},"answer":"B"},
+    {"id":18,"question":"Which of the following is NOT one of the five pillars of Islam?","options":{"A":"Shahada","B":"Salah","C":"Jihad","D":"Zakat"},"answer":"C"},
+    {"id":19,"question":"Which direction do Muslims face during Hajj rituals?","options":{"A":"Medina","B":"Ka’aba in Mecca","C":"Jerusalem","D":"Baghdad"},"answer":"B"},
+    {"id":20,"question":"What is the meaning of 'Hijab'?","options":{"A":"Fasting","B":"Charity","C":"Covering or modest dress for Muslim women","D":"Prayer"},"answer":"C"}
+  ],
+{
+  "french": [
+    {"id":1,"question":"Quel est le mot français pour 'apple'?","options":{"A":"Banane","B":"Pomme","C":"Orange","D":"Raisin"},"answer":"B"},
+    {"id":2,"question":"Comment dit-on 'Good morning' en français?","options":{"A":"Bonsoir","B":"Bonne nuit","C":"Bonjour","D":"Salut"},"answer":"C"},
+    {"id":3,"question":"Quelle est la traduction française de 'I am a student'?","options":{"A":"Je suis un professeur","B":"Je suis étudiant","C":"Tu es étudiant","D":"Il est étudiant"},"answer":"B"},
+    {"id":4,"question":"Quel pronom personnel correspond à 'they' pour un groupe de femmes?","options":{"A":"Ils","B":"Nous","C":"Elles","D":"Vous"},"answer":"C"},
+    {"id":5,"question":"Quelle est la forme correcte du verbe 'avoir' pour 'nous'?","options":{"A":"Ai","B":"Avons","C":"Avez","D":"Ont"},"answer":"B"},
+    {"id":6,"question":"Comment dit-on 'library' en français?","options":{"A":"Bibliothèque","B":"Librairie","C":"École","D":"Université"},"answer":"A"},
+    {"id":7,"question":"Quel est le féminin de 'acteur'?","options":{"A":"Actrice","B":"Acteuse","C":"Acteur","D":"Acte"},"answer":"A"},
+    {"id":8,"question":"Comment dit-on 'I like to read books' en français?","options":{"A":"J'aime lire des livres","B":"Je lis les livres","C":"J'aime lire le livre","D":"Je lis des livres"},"answer":"A"},
+    {"id":9,"question":"Quelle est la traduction de 'My house is big'?","options":{"A":"Ma maison est grande","B":"Mon maison est grande","C":"Ma maison est grand","D":"Mon maison est grand"},"answer":"A"},
+    {"id":10,"question":"Quel est le contraire de 'petit'?","options":{"A":"Grand","B":"Moyen","C":"Long","D":"Court"},"answer":"A"},
+    {"id":11,"question":"Comment dit-on 'They are friends' en français pour un groupe mixte?","options":{"A":"Ils sont amis","B":"Elles sont amis","C":"Nous sommes amis","D":"Vous êtes amis"},"answer":"A"},
+    {"id":12,"question":"Quel est le pluriel de 'cheval'?","options":{"A":"Chevals","B":"Chevaux","C":"Chevaus","D":"Chevales"},"answer":"B"},
+    {"id":13,"question":"Quel article défini correspond à 'fille'?","options":{"A":"Le","B":"La","C":"Les","D":"L'"},"answer":"B"},
+    {"id":14,"question":"Comment dit-on 'I am going to school' en français?","options":{"A":"Je vais à l'école","B":"J'allons à l'école","C":"Je vais école","D":"Je vais à la école"},"answer":"A"},
+    {"id":15,"question":"Quel est le participe passé du verbe 'manger'?","options":{"A":"Mangé","B":"Mange","C":"Manges","D":"Mangée"},"answer":"A"},
+    {"id":16,"question":"Comment traduit-on 'She is happy' en français?","options":{"A":"Elle est heureux","B":"Elle est heureuse","C":"Il est heureuse","D":"Elle est heure"},"answer":"B"},
+    {"id":17,"question":"Quel adjectif possessif correspond à 'my' pour un nom féminin singulier?","options":{"A":"Mon","B":"Ma","C":"Mes","D":"Mien"},"answer":"B"},
+    {"id":18,"question":"Comment dit-on 'We are eating' en français?","options":{"A":"Nous mangeons","B":"Nous mangons","C":"Nous mangions","D":"Nous mangé"},"answer":"A"},
+    {"id":19,"question":"Quelle est la traduction de 'He is reading a book'?","options":{"A":"Il lit un livre","B":"Il lis un livre","C":"Il lit le livre","D":"Il lire un livre"},"answer":"A"},
+    {"id":20,"question":"Quel est le féminin pluriel de 'heureux'?","options":{"A":"Heureuse","B":"Heureuxes","C":"Heureuses","D":"Heureus"},"answer":"C"}
+  ]
+};
+
+function nextPage(pageNum){
+  if(pageNum === 2){
+    fullName = document.getElementById('fullName').value;
+    phone = document.getElementById('phone').value;
+    email = document.getElementById('email').value;
+    if(!fullName || !phone || !email) return alert('Please fill all fields');
+  }
+  if(pageNum === 3){
+    const selected = Array.from(document.getElementById('subjectSelect').selectedOptions).map(o=>o.value);
+    if(selected.length !== 3) return alert("Please select exactly 3 subjects.");
+    selectedSubjects = ["english", ...selected];
+  }
+  document.getElementById('page'+currentPage).classList.remove('active');
+  currentPage = pageNum;
+  document.getElementById('page'+currentPage).classList.add('active');
+}
+
+function startExam(){
+  if(!mediaRecorder) { alert("Webcam not ready. Please reload and allow camera."); return; }
+  examQuestions = selectedSubjects.flatMap(s => questionBank[s] || []);
+  candidateAnswers = new Array(examQuestions.length).fill(null);
+  nextPage(4);
+  displayQuestion();
+  startTimer();
+  mediaRecorder.start();
+}
+
+function displayQuestion(){
+  const q = examQuestions[currentQuestionIndex];
+  if(!q) return;
+  document.getElementById('questionText').innerText = `${currentQuestionIndex+1}. ${q.question}`;
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = "";
+  for(const key in q.options){
+    const btn = document.createElement('button');
+    btn.innerText = `${key}: ${q.options[key]}`;
+    btn.onclick = ()=>{ candidateAnswers[currentQuestionIndex]=key; nextQuestion(); };
+    optionsDiv.appendChild(btn);
+  }
+  renderTabs();
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('numberTabs');
+  tabs.innerHTML = "";
+  examQuestions.forEach((_,i)=>{
+    const div = document.createElement('div');
+    div.className = 'numTab' + (i===currentQuestionIndex?' active':'');
+    div.innerText = i+1;
+    div.onclick = ()=>{ currentQuestionIndex=i; displayQuestion(); };
+    tabs.appendChild(div);
+  });
+}
+
+function nextQuestion(){
+  currentQuestionIndex++;
+  if(currentQuestionIndex >= examQuestions.length){ submitExam(); }
+  else { displayQuestion(); }
+}
+
+function startTimer(){
+  timer = setInterval(()=>{
+    timeLeft--;
+    const m = Math.floor(timeLeft/60);
+    const s = timeLeft%60;
+    document.getElementById('timer').innerText = `Time Left: ${m}:${s<10?'0'+s:s}`;
+    if(timeLeft<=0){ submitExam(); }
+  },1000);
+}
+
+async function submitExam(){
+  clearInterval(timer);
+  if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
+    const videoRef = storage.ref(`proctor_videos/${fullName}_${Date.now()}.webm`);
+    await videoRef.put(blob);
+    const videoURL = await videoRef.getDownloadURL();
+    const score = calculateScore();
+    await db.collection("exam_results").add({
+      fullName, phone, email,
+      subjects: selectedSubjects,
+      answers: candidateAnswers,
+      score,
+      videoURL,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    nextPage(5);
+  };
+}
+
+function calculateScore(){
+  let s = 0;
+  examQuestions.forEach((q,i)=>{ if(candidateAnswers[i]===q.answer) s++; });
+  return (s/examQuestions.length)*100;
+}
+
+// Calculator
+let calcDisplay = document.getElementById('calc-display');
+function toggleCalculator(){
+  const c = document.getElementById('calculator');
+  c.style.display = (c.style.display === 'none' || c.style.display === '') ? 'block' : 'none';
+}
+function calcInput(v){ calcDisplay.value += v; }
+function calcClear(){ calcDisplay.value = ''; }
+function calcEvaluate(){
+  try { calcDisplay.value = eval(calcDisplay.value.replace(/÷/g,'/').replace(/×/g,'*')); }
+  catch { calcDisplay.value = 'Error'; }
+}
+</script>
+</body>
+</html>
