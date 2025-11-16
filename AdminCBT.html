@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard - Flexi Tutors</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+  }
+  header {
+    background: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+  th {
+    background: #007bff;
+    color: white;
+  }
+  button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  .delete-btn {
+    background: #dc3545;
+  }
+  .delete-btn:hover {
+    background: #a71d2a;
+  }
+  footer {
+    text-align: center;
+    margin: 20px 0;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Flexi Tutors - Admin Dashboard</h1>
+  <p>Monitor Student Exam Submissions</p>
+</header>
+
+<div class="container">
+  <h2>Submitted Exam Results</h2>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>Subject</th>
+        <th>Score</th>
+        <th>Timestamp</th>
+        <th>Video</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="7">Loading data...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  &copy; 2025 Flexi Tutors | Admin Dashboard
+</footer>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script>
+
+<script>
+// 🔹 Firebase Configuration (replace with your credentials)
+const firebaseConfig = {
+  apiKey: "AIzaSyCaVTwzI_0h0RVdh_ASDDqdsvrg_3oHPSs",
+  authDomain: "flexi-702a9.firebaseapp.com",
+  projectId: "flexi-702a9",
+  storageBucket: "flexi-702a9.firebasestorage.app",
+  messagingSenderId: "647814322831",
+  appId: "1:647814322831:web:74fc00cfc62abdc7e76efa",
+  measurementId: "G-7BC49SZJ6V"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// 🔹 Fetch Exam Results
+const resultsTable = document.getElementById("resultsTable").querySelector("tbody");
+
+async function loadResults() {
+  resultsTable.innerHTML = "<tr><td colspan='7'>Loading results...</td></tr>";
+  const snapshot = await db.collection("exam_results").orderBy("timestamp", "desc").get();
+
+  if (snapshot.empty) {
+    resultsTable.innerHTML = "<tr><td colspan='7'>No results found.</td></tr>";
+    return;
+  }
+
+  resultsTable.innerHTML = "";
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const tr = document.createElement("tr");
+
+    const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : "N/A";
+    const videoLink = data.videoURL ? `<button onclick="viewVideo('${data.videoURL}')">View</button>` : "No Video";
+
+    tr.innerHTML = `
+      <td>${data.fullName}</td>
+      <td>${data.email}</td>
+      <td>${data.subject}</td>
+      <td>${data.score?.toFixed(2) ?? '0'}%</td>
+      <td>${date}</td>
+      <td>${videoLink}</td>
+      <td>
+        <button class="delete-btn" onclick="deleteResult('${doc.id}')">Delete</button>
+      </td>
+    `;
+    resultsTable.appendChild(tr);
+  });
+}
+
+// 🔹 View Video
+function viewVideo(url) {
+  window.open(url, "_blank");
+}
+
+// 🔹 Delete Result
+async function deleteResult(docId) {
+  if (!confirm("Are you sure you want to delete this record?")) return;
+  await db.collection("exam_results").doc(docId).delete();
+  alert("Record deleted successfully.");
+  loadResults();
+}
+
+// Load results on startup
+loadResults();
+</script>
+
+</body>
+</html>
