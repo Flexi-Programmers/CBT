@@ -1,494 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>UNILAG CBT Simulator - Flexi Tutors</title>
-<style>
-  body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f4f4f4;}
-  header{background:#fff;padding:15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ccc;}
-  header img{width:90px;}
-  header h1{margin:0;font-size:24px;}
-  .card{background:#fff;padding:20px;margin:20px auto;width:90%;max-width:700px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.12);}
-  button{padding:10px 20px;border:none;border-radius:5px;cursor:pointer;background:#007bff;color:white;font-weight:bold;}
-  button:hover{background:#0056b3;}
-  .option{padding:12px;background:#f0f0f0;margin:8px 0;border-radius:5px;cursor:pointer;}
-  .option:hover{background:#ddd;}
-  .option.selected{background:#cfe8ff;}
-  #timer{text-align:right;font-weight:bold;color:#d9534f;font-size:16px;margin-bottom:10px;}
-  #calculator{display:none;position:fixed;top:20px;right:20px;width:260px;padding:20px;background:#fff;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);z-index:1000;}
-  #calcDisplay{width:100%;height:40px;margin-bottom:10px;font-size:18px;padding:5px;text-align:right;border:1px solid #ccc;border-radius:5px;}
-  .calcBtn{width:60px;height:40px;margin:3px;font-size:18px;cursor:pointer;}
-  #proctorBox{padding-left:20px;}
-  #proctorCam{border:2px solid #000;border-radius:6px;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flexi Tutors | Free 2026JAMB Form </title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background-color: #0d47a1; /* Flexi Tutors blue */
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    header img {
+      height: 40px;
+      width: 40px;
+      object-fit: contain;
+    }
+    .container {
+      text-align: center;
+      padding: 50px 20px;
+    }
+    h1 {
+      font-size: 48px;
+      color: #d32f2f;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 20px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 30px;
+      text-decoration: none;
+      background: #0d47a1;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-
-<header>
-  <div style="display:flex;align-items:center;">
-    <img src="https://i.postimg.cc/RVtDrqPT/Screenshot-20251029-225004-2.png" alt="Logo">
-    <h1 style="margin-left:10px;">Flexi Tutors</h1>
+  <header>
+    <img src="https://i.postimg.cc/RVtDrqPT/Screenshot-20251029-225004-2.png" alt="Flexi Tutors Logo" />
+    <h2>Flexi Tutors</h2>
+  </header>
+  <div class="container">
+    <p>📡</p>
+    <h1>Exam Not Found</h1>
+    <p>The exam you're looking for doesn't exist or has been removed.</p>
+    <a href="/">Go Back Home</a>
   </div>
-  <div id="timer">10:00</div>
-</header>
-
-<div id="proctorBox">
-  <video id="proctorCam" autoplay muted playsinline style="width:160px;height:120px;"></video>
-</div>
-
-<!-- PAGE 1: STUDENT INFO -->
-<div class="card" id="page1">
-  <h2>Enter Your Details</h2>
-  <input type="text" id="studentName" placeholder="Full Name" style="width:100%;padding:10px;margin-bottom:10px;">
-  <input type="email" id="studentEmail" placeholder="Email" style="width:100%;padding:10px;margin-bottom:10px;">
-  <button onclick="goToPage2()">Next</button>
-</div>
-
-<!-- PAGE 2: SUBJECT SELECTION -->
-<div class="card" id="page2" style="display:none;">
-  <h2>Select Subjects (English + 3 others)</h2>
-  <div><input type="checkbox" class="subject" value="english" checked disabled> English</div>
-  <div><input type="checkbox" class="subject" value="math"> Mathematics</div>
-  <div><input type="checkbox" class="subject" value="biology"> Biology</div>
-  <div><input type="checkbox" class="subject" value="chemistry"> Chemistry</div>
-  <div><input type="checkbox" class="subject" value="physics"> Physics</div>
-  <div style="margin-top:12px;"><button onclick="goToPage3()">Next</button></div>
-</div>
-
-<!-- PAGE 3: INSTRUCTIONS -->
-<div class="card" id="page3" style="display:none;">
-  <h2>Exam Instructions</h2>
-  <ul>
-    <li>Total Time: 10 minutes</li>
-    <li>40 Questions (10 per selected subject)</li>
-    <li>Calculator is available</li>
-    <li>Webcam proctoring enabled</li>
-    <li>Navigation: Previous / Next</li>
-  </ul>
-  <button onclick="startExam()">Start Exam</button>
-</div>
-
-<!-- PAGE 4: EXAM -->
-<div class="card" id="page4" style="display:none;">
-  <button style="float:right;margin-bottom:10px;" onclick="toggleCalculator()">Calculator</button>
-  <h2 id="questionText"></h2>
-  <div id="optionsArea"></div>
-  <div style="margin-top:15px;">
-    <button onclick="prevQuestion()">Previous</button>
-    <button onclick="nextQuestion()">Next</button>
-    <button onclick="submitExam()">Submit Exam</button>
-  </div>
-</div>
-
-<!-- PAGE 5: SUBMISSION STATUS -->
-<div class="card" id="page5" style="display:none;">
-  <h2>Submission Status</h2>
-  <p id="statusMessage">Uploading exam, please wait...</p>
-  <video id="recordedVideo" controls style="width:100%;border-radius:8px;"></video>
-  <p><strong>Name:</strong> <span id="spName"></span></p>
-  <p><strong>Email:</strong> <span id="spEmail"></span></p>
-  <p><strong>Subjects:</strong> <span id="spSub"></span></p>
-  <p><strong>Firestore Status:</strong> <span id="fireStatus" style="color:green;">✓ Placeholder</span></p>
-</div>
-
-<!-- CALCULATOR -->
-<div id="calculator">
-  <input type="text" id="calcDisplay" readonly>
-  <div>
-    <button class="calcBtn" onclick="calcInput('7')">7</button>
-    <button class="calcBtn" onclick="calcInput('8')">8</button>
-    <button class="calcBtn" onclick="calcInput('9')">9</button>
-    <button class="calcBtn" onclick="calcInput('/')">/</button>
-  </div>
-  <div>
-    <button class="calcBtn" onclick="calcInput('4')">4</button>
-    <button class="calcBtn" onclick="calcInput('5')">5</button>
-    <button class="calcBtn" onclick="calcInput('6')">6</button>
-    <button class="calcBtn" onclick="calcInput('*')">*</button>
-  </div>
-  <div>
-    <button class="calcBtn" onclick="calcInput('1')">1</button>
-    <button class="calcBtn" onclick="calcInput('2')">2</button>
-    <button class="calcBtn" onclick="calcInput('3')">3</button>
-    <button class="calcBtn" onclick="calcInput('-')">-</button>
-  </div>
-  <div>
-    <button class="calcBtn" onclick="calcInput('0')">0</button>
-    <button class="calcBtn" onclick="calcInput('.')">.</button>
-    <button class="calcBtn" onclick="calculate()">=</button>
-    <button class="calcBtn" onclick="calcInput('+')">+</button>
-  </div>
-  <div>
-    <button class="calcBtn" style="width:100%;" onclick="clearCalc()">C</button>
-  </div>
-</div>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<script>
-/* ============================
-   Firebase config & Init
-   ============================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyCaVTwzI_0h0RVdh_ASDDqdsvrg_3oHPSs",
-  authDomain: "flexi-702a9.firebaseapp.com",
-  projectId: "flexi-702a9",
-  storageBucket: "flexi-702a9.appspot.com",
-  messagingSenderId: "647814322831",
-  appId: "1:647814322831:web:74fc00cfc62abdc7e76efa",
-  measurementId: "G-7BC49SZJ6V"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
-
-/* ============================
-   UI + State
-   ============================ */
-let recorder = null;
-let recordedChunks = [];
-let mediaStream = null;
-let timerInterval = null;
-let selectedSubjects = [];
-let examQuestions = [];
-let currentIndex = 0;
-let selectedAnswers = {}; // keyed by question global index
-let examTime = 600; // 10 minutes
-let videoUploaded = false;
-
-/* ============================
-   Sample question bank (10 each)
-   ============================ */
-const questionsBank = {
-  english: [
-    {q:"Hardly had the delegates arrived _____ the chairman began his address.", o:["when","than","before","while"], a:"when"},
-    {q:"Choose the option that best completes the sentence: The teacher insisted that every student _____ present.", o:["be","is","was","were"], a:"be"},
-    {q:"Identify the antonym of 'incontrovertible'.", o:["certain","irreversible","questionable","permanent"], a:"questionable"},
-    {q:"Which sentence is grammatically correct?", o:["The committee have agreed to meet","The committee has agreed to meet","The committee are agreed to meet","The committee is agree to meet"], a:"The committee has agreed to meet"},
-    {q:"Choose the correct synonym of 'bellicose'.", o:["peaceful","warlike","gentle","tolerant"], a:"warlike"},
-    {q:"Fill in the blank: He behaves as though he _____ the company.", o:["owns","owned","has owned","is owning"], a:"owned"},
-    {q:"Identify the figure of speech: 'The silence was deafening.'", o:["oxymoron","metaphor","hyperbole","irony"], a:"oxymoron"},
-    {q:"Choose the option that best replaces the underlined word: She *berated* the boy for his misconduct.", o:["praised","scolded","ignored","questioned"], a:"scolded"},
-    {q:"Select the correct indirect speech: 'He said, “I will arrive tomorrow.”'", o:["He said he will arrive tomorrow","He said he would arrive the next day","He said he would arrive tomorrow","He said he will arrive the next day"], a:"He said he would arrive the next day"},
-    {q:"Choose the correct expression: He is not only brilliant _____ hardworking.", o:["but also","and also","but","and"], a:"but also"}
-  ],
-
-  math: [
-    {q:"Solve: If 3^(x-1) = 27, find x.", o:["2","3","4","5"], a:"4"},
-    {q:"Find the value of x if log₁₀(x) + log₁₀(5) = 2.", o:["2","5","10","20"], a:"20"},
-    {q:"The determinant of matrix [[2,3],[1,4]] is:", o:["5","2","8","-1"], a:"5"},
-    {q:"Integrate: ∫(2x³) dx.", o:["2x⁴","x⁴/2","(2/4)x⁴","(1/2)x⁴"], a:"(1/2)x⁴"},
-    {q:"If sinθ = 3/5, find cosθ (acute angle).", o:["4/5","5/3","√5/3","1/5"], a:"4/5"},
-    {q:"Solve: The roots of x² - 5x + 6 = 0 are:", o:["1 and 6","2 and 3","-2 and -3","3 and 6"], a:"2 and 3"},
-    {q:"If a polygon has interior angle sum of 900°, how many sides does it have?", o:["5","6","7","8"], a:"7"},
-    {q:"Differentiate y = 5x² - 3x + 1.", o:["10x - 3","5x - 3","10x + 3","5x² - 3"], a:"10x - 3"},
-    {q:"Solve: If a varies inversely as b and a=4 when b=3, find a when b=12.", o:["1","2","3","0.5"], a:"1"},
-    {q:"Find the simple interest on ₦40,000 at 5% per annum for 3 years.", o:["₦6,000","₦5,000","₦4,500","₦8,000"], a:"₦6,000"}
-  ],
-
-  chemistry: [
-    {q:"Which of the following is the correct electron configuration of chlorine (17)?", o:["1s²2s²2p⁶3s²3p⁵","1s²2s²2p⁶3s²3p⁶","1s²2s²2p⁶3s²3p⁴","1s²2s²2p⁶3s¹3p⁶"], a:"1s²2s²2p⁶3s²3p⁵"},
-    {q:"What volume of gas is occupied by 2 moles at STP?", o:["11.2 L","22.4 L","44.8 L","2.24 L"], a:"44.8 L"},
-    {q:"Which of the following is NOT an acid?", o:["HCl","H₂SO₄","NaOH","HNO₃"], a:"NaOH"},
-    {q:"In electrolysis, oxidation occurs at the:", o:["anode","cathode","salt bridge","electrolyte"], a:"anode"},
-    {q:"Which gas turns moist red litmus paper blue?", o:["CO₂","NH₃","SO₂","H₂"], a:"NH₃"},
-    {q:"What is the oxidation number of sulfur in H₂SO₄?", o:["+2","+4","+6","+8"], a:"+6"},
-    {q:"Which bond is present in Cl₂?", o:["ionic","polar covalent","non-polar covalent","metallic"], a:"non-polar covalent"},
-    {q:"Which factor increases the rate of a chemical reaction?", o:["lower temperature","lower surface area","presence of catalyst","lower concentration"], a:"presence of catalyst"},
-    {q:"The major component of natural gas is:", o:["ethane","propane","butane","methane"], a:"methane"},
-    {q:"Avogadro's number is:", o:["6.02 × 10²³","3.14","9.8 m/s²","1.60 × 10⁻¹⁹"], a:"6.02 × 10²³"}
-  ],
-
-  physics: [
-    {q:"A body moves with uniform acceleration from rest. After 6s, it reaches 30 m/s. Find the acceleration.", o:["2.5 m/s²","5 m/s²","10 m/s²","15 m/s²"], a:"5 m/s²"},
-    {q:"Which law explains why a rocket moves forward when gases are expelled backward?", o:["Newton’s 1st law","Newton’s 2nd law","Newton’s 3rd law","Law of gravitation"], a:"Newton’s 3rd law"},
-    {q:"The pitch of a sound depends on:", o:["frequency","amplitude","speed","intensity"], a:"frequency"},
-    {q:"Which of these is a vector quantity?", o:["work","power","momentum","energy"], a:"momentum"},
-    {q:"A stone thrown upward has zero velocity at the top but still has:", o:["zero acceleration","negative acceleration","positive velocity","infinite mass"], a:"negative acceleration"},
-    {q:"The instrument used to measure electric current is:", o:["voltmeter","ammeter","galvanometer","potentiometer"], a:"ammeter"},
-    {q:"Heat transfer in a vacuum occurs by:", o:["conduction","convection","radiation","refraction"], a:"radiation"},
-    {q:"If wavelength = 0.5m and frequency = 4Hz, speed =", o:["0.125 m/s","2 m/s","4 m/s","8 m/s"], a:"2 m/s"},
-    {q:"The S.I unit of pressure is:", o:["Newton","Watt","Pascal","Henry"], a:"Pascal"},
-    {q:"A load of 200N is lifted by a machine using an effort of 50N. The mechanical advantage is:", o:["2","3","4","5"], a:"4"}
-  ],
-
-  biology: [
-    {q:"Which organelle is responsible for aerobic respiration?", o:["ribosome","mitochondrion","chloroplast","nucleus"], a:"mitochondrion"},
-    {q:"The part of the nephron where filtration occurs is:", o:["Loop of Henle","Bowman’s capsule","Collecting duct","Distal tubule"], a:"Bowman’s capsule"},
-    {q:"Which of the following is a density-dependent factor?", o:["flood","fire","competition","drought"], a:"competition"},
-    {q:"The hormone responsible for regulating blood sugar is:", o:["adrenaline","thyroxine","insulin","oxytocin"], a:"insulin"},
-    {q:"The longest bone in the human body is the:", o:["tibia","fibula","femur","humerus"], a:"femur"},
-    {q:"Which of the following is NOT a communicable disease?", o:["measles","cholera","malaria","diabetes"], a:"diabetes"},
-    {q:"Plants respond to light by a process known as:", o:["tropism","thigmotropism","phototropism","geotropism"], a:"phototropism"},
-    {q:"Which blood vessel carries blood from the lungs to the heart?", o:["pulmonary artery","aorta","vena cava","pulmonary vein"], a:"pulmonary vein"},
-    {q:"Genotype AA and AA can produce:", o:["AA only","AA and AS","AA and SS","AS only"], a:"AA only"},
-    {q:"The functional unit of the nervous system is:", o:["nephron","neuron","axon","dendrite"], a:"neuron"}
-  ]
-};
-/* ============================
-   Utilities
-   ============================ */
-function show(id){document.getElementById(id).style.display="block";}
-function hide(id){document.getElementById(id).style.display="none";}
-function el(id){return document.getElementById(id);}
-
-/* ============================
-   Navigation
-   ============================ */
-function goToPage2(){
-  const name = el("studentName").value.trim();
-  const email = el("studentEmail").value.trim();
-  if(!name || !email){ alert("Enter Name & Email"); return; }
-  hide("page1"); show("page2");
-}
-function goToPage3(){
-  const checked = document.querySelectorAll(".subject:checked");
-  if(checked.length !== 4){ alert("Select exactly 4 subjects (English + 3)"); return; }
-  hide("page2"); show("page3");
-}
-
-/* ============================
-   Proctor camera & recorder setup
-   ============================ */
-async function initProctor(){
-  try{
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-    el("proctorCam").srcObject = mediaStream;
-    // Recorder prepared but NOT started until exam starts
-  }catch(err){
-    console.error("Camera error:", err);
-    alert("Unable to access camera/microphone. Please allow camera permissions.");
-  }
-}
-
-/* start media recorder (called at exam start) */
-function startRecorder(){
-  if(!mediaStream){ console.warn("No media stream available"); return; }
-  recordedChunks = [];
-  try{
-    recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm; codecs=vp9' });
-  }catch(e){
-    recorder = new MediaRecorder(mediaStream);
-  }
-  recorder.ondataavailable = (e) => { if(e.data && e.data.size>0) recordedChunks.push(e.data); };
-  recorder.start();
-}
-
-/* ============================
-   Exam flow
-   ============================ */
-function startExam(){
-  hide("page3"); show("page4");
-  // collect subjects
-  selectedSubjects = Array.from(document.querySelectorAll(".subject:checked")).map(s=>s.value);
-  // assemble questions (10 per subject). already in bank as 10 each
-  examQuestions = [];
-  selectedSubjects.forEach(sub=>{
-    if(Array.isArray(questionsBank[sub])){
-      // copy and label with subject
-      const copied = questionsBank[sub].map(item => Object.assign({}, item, {subject: sub}));
-      examQuestions = examQuestions.concat(copied);
-    }
-  });
-  // Shuffle questions (Fisher-Yates)
-  for (let i = examQuestions.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
-  }
-  // Trim to 40 if bank larger; for this build bank is 40 total (4 subjects ×10)
-  if(examQuestions.length > 40) examQuestions = examQuestions.slice(0, 40);
-  currentIndex = 0;
-  selectedAnswers = {};
-  loadQuestion();
-  startTimer();
-  // Start recorder if not already
-  if(!recorder || recorder.state === "inactive") startRecorder();
-}
-
-/* ============================
-   Timer
-   ============================ */
-function startTimer(){
-  el("timer").innerText = formatTime(examTime);
-  timerInterval = setInterval(() => {
-    examTime--;
-    el("timer").innerText = formatTime(examTime);
-    if(examTime <= 0){
-      clearInterval(timerInterval);
-      submitExam();
-    }
-  }, 1000);
-}
-function formatTime(s){
-  const m = Math.floor(s/60), sec = s%60;
-  return `Time Left: ${m}:${sec<10?'0'+sec:sec}`;
-}
-
-/* ============================
-   Questions UI
-   ============================ */
-function loadQuestion(){
-  const q = examQuestions[currentIndex];
-  if(!q){ el("questionText").innerText = "No question found."; el("optionsArea").innerHTML=""; return; }
-  el("questionText").innerText = `${currentIndex+1}. (${q.subject.toUpperCase()}) ${q.q}`;
-  let optsHTML = "";
-  q.o.forEach((opt, idx)=>{
-    const key = `${currentIndex}_${idx}`;
-    const selected = selectedAnswers[currentIndex] === opt ? "selected" : "";
-    optsHTML += `<div class="option ${selected}" onclick="pickAnswer('${escapeText(opt)}', this)">${escapeText(opt)}</div>`;
-  });
-  el("optionsArea").innerHTML = optsHTML;
-}
-
-/* helper to escape single quotes for inline handlers */
-function escapeText(t){
-  return t.replace(/'/g, "\\'");
-}
-
-function pickAnswer(opt, elClicked){
-  // Save answer for currentIndex
-  selectedAnswers[currentIndex] = opt;
-  // Visual highlight
-  const all = document.querySelectorAll("#optionsArea .option");
-  all.forEach(a=>a.classList.remove("selected"));
-  if(elClicked) elClicked.classList.add("selected");
-  // optional: auto-next
-  // nextQuestion();
-}
-
-function nextQuestion(){
-  if(currentIndex < examQuestions.length - 1){
-    currentIndex++; loadQuestion();
-  } else {
-    alert("Last question");
-  }
-}
-function prevQuestion(){
-  if(currentIndex > 0){
-    currentIndex--; loadQuestion();
-  } else {
-    alert("First question");
-  }
-}
-
-/* ============================
-   Calculator
-   ============================ */
-function toggleCalculator(){ const c=el("calculator"); c.style.display = c.style.display === "none" ? "block" : "none"; }
-function calcInput(v){ el("calcDisplay").value += v; }
-function calculate(){ try{ el("calcDisplay").value = eval(el("calcDisplay").value); }catch(e){ alert("Error"); } }
-function clearCalc(){ el("calcDisplay").value = ""; }
-
-/* ============================
-   Submit exam (single, robust function)
-   - Stops recorder
-   - Shows local preview immediately
-   - Uploads video to Firebase Storage
-   - Saves answers + metadata to Firestore
-   ============================ */
-async function submitExam(){
-  // Prevent double-submits
-  if(el("page5").style.display === "block") return;
-  clearInterval(timerInterval);
-  // stop recorder safely
-  try {
-    if(recorder && recorder.state !== "inactive") recorder.stop();
-  } catch(e){ console.warn("recorder stop error:", e); }
-
-  // Wait for recorder to finish collecting data
-  // recorder.onstop handler below will proceed to upload / show preview
-  // We'll implement onstop now:
-  if(recorder){
-    recorder.onstop = async () => {
-      const blob = new Blob(recordedChunks, { type: "video/webm" });
-      // Local preview immediately (Option 2 behavior)
-      const localURL = URL.createObjectURL(blob);
-      el("recordedVideo").src = localURL;
-
-      // Show UI page5 and student info while upload happens
-      el("spName").innerText = el("studentName").value;
-      el("spEmail").innerText = el("studentEmail").value;
-      el("spSub").innerText = selectedSubjects.join(", ");
-      hide("page4");
-      show("page5");
-      el("statusMessage").innerText = "Uploading exam to server...";
-
-      // Upload to Firebase Storage
-      try{
-        const email = el("studentEmail").value.replace(/[@.]/g, "_");
-        const fileName = `${email}_${Date.now()}.webm`;
-        const storageRef = storage.ref().child('exam_videos/' + fileName);
-        const uploadTask = storageRef.put(blob);
-
-        // Optional: listen for progress
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            el("statusMessage").innerText = `Uploading video: ${percent}%`;
-          }, 
-          (error) => {
-            console.error("Upload error:", error);
-            el("statusMessage").innerText = "Upload failed. Saved locally.";
-            el("fireStatus").innerText = "✗ Upload failed";
-          }, 
-          async () => {
-            // Upload completed
-            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-            // Save metadata & answers to Firestore
-            await db.collection("examSubmissions").add({
-              name: el("studentName").value,
-              email: el("studentEmail").value,
-              subjects: selectedSubjects,
-              answers: selectedAnswers,
-              videoURL: downloadURL,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            el("recordedVideo").src = downloadURL; // show the uploaded hosted video
-            el("statusMessage").innerText = "Exam submitted successfully!";
-            el("fireStatus").innerText = "✓ Uploaded & saved";
-            videoUploaded = true;
-          }
-        );
-      }catch(err){
-        console.error("Upload / Firestore error:", err);
-        el("statusMessage").innerText = "Upload failed. Check console.";
-        el("fireStatus").innerText = "✗ Upload failed";
-      }
-    };
-  } else {
-    // If no recorder (camera not allowed), still save answers only
-    try {
-      await db.collection("examSubmissions").add({
-        name: el("studentName").value,
-        email: el("studentEmail").value,
-        subjects: selectedSubjects,
-        answers: selectedAnswers,
-        videoURL: null,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      hide("page4"); show("page5");
-      el("statusMessage").innerText = "Exam submitted (no video).";
-      el("fireStatus").innerText = "✓ Saved";
-    } catch(err){
-      console.error("Firestore save error:", err);
-      alert("Submission failed.");
-    }
-  }
-}
-
-/* ============================
-   Safe init on load
-   ============================ */
-window.addEventListener('load', () => {
-  // Initialize proctor camera but do not force start recording until exam start
-  initProctor();
-  // Ensure timer display default
-  el("timer").innerText = formatTime(examTime);
-});
-</script>
 </body>
 </html>
